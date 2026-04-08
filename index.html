@@ -1,12 +1,4 @@
-<div class="pl-2 mt-0.5 space-y-0.5">
-          <button @click="switchModule('acc-kasbank')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-kasbank'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-kasbank'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-kasbank'){$el.style.background='';$el.style.color='#8898AA'}">Kas &amp; Bank</button>
-          <button @click="switchModule('acc-penjualan')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-penjualan'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-penjualan'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-penjualan'){$el.style.background='';$el.style.color='#8898AA'}">Penjualan</button>
-          <button @click="switchModule('acc-pembelian')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-pembelian'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-pembelian'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-pembelian'){$el.style.background='';$el.style.color='#8898AA'}">Pembelian</button>
-          <button @click="switchModule('acc-biaya')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-biaya'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-biaya'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-biaya'){$el.style.background='';$el.style.color='#8898AA'}">Biaya &amp; Expense</button>
-          <button @click="switchModule('acc-coa')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-coa'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-coa'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-coa'){$el.style.background='';$el.style.color='#8898AA'}">Buku Akun (CoA)</button>
-          <button @click="switchModule('acc-laporan')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-laporan'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-laporan'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-laporan'){$el.style.background='';$el.style.color='#8898AA'}">Laporan Keuangan</button>
-          <button @click="switchModule('acc-jurnal')" class="w-full text-left block px-2.5 py-1.5 rounded-lg transition-all" :style="currentModule==='acc-jurnal'?'font-size:12px;color:#86EFAC;font-weight:600;background:rgba(134,239,172,.12);':'font-size:12px;color:#8898AA;'" @mouseenter="if(currentModule!=='acc-jurnal'){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}" @mouseleave="if(currentModule!=='acc-jurnal'){$el.style.background='';$el.style.color='#8898AA'}">Jurnal Umum</button>
-        </div><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
@@ -599,7 +591,7 @@
 
 <!-- ═══ MODULE: PROC — PROC-MEMO ═══ -->
 <div x-show="currentModule==='proc-memo'" x-cloak x-data="mod_proc_memo()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Memo Internal</p>
@@ -637,8 +629,8 @@
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 
 <!-- Flow Steps -->
@@ -1078,7 +1070,7 @@
 
 <!-- ═══ MODULE: PROC — PROC-PO ═══ -->
 <div x-show="currentModule==='proc-po'" x-cloak x-data="mod_proc_po()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Purchase Order</p>
@@ -1116,8 +1108,8 @@
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 
 <!-- Flow Steps PO -->
@@ -1579,7 +1571,7 @@
 
 <!-- ═══ MODULE: PROC — PROC-PEMBAYARAN ═══ -->
 <div x-show="currentModule==='proc-pembayaran'" x-cloak x-data="mod_proc_pembayaran()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Pembayaran Supplier</p>
@@ -1617,8 +1609,8 @@
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <!-- Flow Steps -->
 <div class="flex items-start gap-1 p-4 rounded-2xl mb-5" style="background:#fff;border:1px solid #F1F5F9;">
@@ -1883,7 +1875,7 @@
 
 <!-- ═══ MODULE: PROC — PROC-SUPPLIER ═══ -->
 <div x-show="currentModule==='proc-supplier'" x-cloak x-data="mod_proc_supplier()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Supplier & Vendor</p>
@@ -1921,8 +1913,8 @@
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <div class="flex items-center gap-3 mb-5">
   <div class="flex items-center gap-2 flex-1 px-3 py-2 rounded-xl" style="background:#fff;border:1px solid #E2E8F0;">
@@ -2005,7 +1997,7 @@
 
 
 <!-- ═══ MODULE: PROC — ANALITIK ═══ -->
-x-data="mod_proc_analitik()">
+<div x-show="currentModule==='proc-analitik'" x-cloak x-data="mod_proc_analitik()">
 <!-- ═══ TOPBAR ═══ -->
 <header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);">
   <div class="flex-1">
@@ -7199,7 +7191,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-DASHBOARD ═══ -->
 
 <div x-show="currentModule==='acc-dashboard'" x-cloak x-data="mod_acc_dashboard()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Dashboard Keuangan</p>
@@ -7252,8 +7244,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <!-- Shortcut Row -->
 <div class="grid grid-cols-6 gap-3 mb-5">
@@ -7355,7 +7347,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-KASBANK ═══ -->
 
 <div x-show="currentModule==='acc-kasbank'" x-cloak x-data="mod_acc_kasbank()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Kas & Bank</p>
@@ -7408,8 +7400,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <!-- Bank cards -->
 <div class="grid grid-cols-4 gap-3 mb-5">
@@ -7538,7 +7530,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-PENJUALAN ═══ -->
 
 <div x-show="currentModule==='acc-penjualan'" x-cloak x-data="mod_acc_penjualan()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Penjualan</p>
@@ -7591,8 +7583,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <!-- Tabs -->
 <div class="flex items-center gap-1 mb-5 p-1 rounded-xl" style="background:#F1F5F9;display:inline-flex;">
@@ -7768,7 +7760,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-PEMBELIAN ═══ -->
 
 <div x-show="currentModule==='acc-pembelian'" x-cloak x-data="mod_acc_pembelian()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Pembelian</p>
@@ -7821,8 +7813,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <div class="flex items-center gap-1 mb-5 p-1 rounded-xl" style="background:#F1F5F9;display:inline-flex;">
   <template x-for="tab in tabs" :key="tab.id">
@@ -7946,7 +7938,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-BIAYA ═══ -->
 
 <div x-show="currentModule==='acc-biaya'" x-cloak x-data="mod_acc_biaya()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Biaya & Expense</p>
@@ -7999,8 +7991,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <div class="flex items-center gap-1 mb-5 p-1 rounded-xl" style="background:#F1F5F9;display:inline-flex;">
   <template x-for="tab in tabs" :key="tab.id">
@@ -8112,7 +8104,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-COA ═══ -->
 
 <div x-show="currentModule==='acc-coa'" x-cloak x-data="mod_acc_coa()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Daftar Akun (CoA)</p>
@@ -8165,8 +8157,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <div class="flex items-center gap-3 mb-5">
   <div class="flex items-center gap-2 flex-1 px-3 py-2 rounded-xl" style="background:#fff;border:1px solid #E2E8F0;">
@@ -8218,7 +8210,7 @@ x-data="mod_proc_analitik()">
 <!-- ═══ MODULE: ACC — ACC-LAPORAN ═══ -->
 
 <div x-show="currentModule==='acc-laporan'" x-cloak x-data="mod_acc_laporan()">
-<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-4 gap-3"
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4"
   style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.05);">
   <div class="flex-shrink-0 pr-3" style="border-right:1px solid #E2E8F0;">
     <p style="font-size:12px;font-weight:700;color:#0F172A;line-height:1.2;">Laporan Keuangan</p>
@@ -8271,8 +8263,8 @@ x-data="mod_proc_analitik()">
     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#059669,#047857);">AD</div>
   </div>
 </header>
-<div style="margin-left:260px;padding-top:56px;min-height:100vh;background:#F8FAFC;overflow-y:auto;">
-<div class="p-5">
+<div class="ml-[260px] pt-14 min-h-screen overflow-y-auto" style="background:#F8FAFC;">
+<div class="p-6">
 
 <!-- Filters -->
 <div class="flex items-center gap-3 mb-5" x-show="!generated">
@@ -8646,7 +8638,7 @@ x-data="mod_proc_analitik()">
   <div class="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0" style="background:#059669;font-size:11px;">AD</div>
 </header>
 <div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
-<div class="p-5">
+<div class="p-6">
 
 <div class="flex items-center justify-between mb-4">
   <div class="flex items-center gap-2">
