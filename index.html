@@ -2039,17 +2039,23 @@
   <div class="card p-5">
     <p style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:4px;">Volume Permintaan per Bulan</p>
     <p style="font-size:11px;color:#94A3B8;margin-bottom:16px;">Jumlah memo & PO diproses</p>
-    <canvas id="procVolChart" height="180"></canvas>
+    <div style="position:relative;height:180px;width:100%;">
+      <canvas id="procVolChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+    </div>
   </div>
   <div class="card p-5">
     <p style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:4px;">Biaya per Departemen</p>
     <p style="font-size:11px;color:#94A3B8;margin-bottom:16px;">Pengeluaran procurement bulan ini</p>
-    <canvas id="procDeptChart" height="180"></canvas>
+    <div style="position:relative;height:180px;width:100%;">
+      <canvas id="procDeptChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+    </div>
   </div>
   <div class="card p-5">
     <p style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:4px;">Lead Time per Vendor</p>
     <p style="font-size:11px;color:#94A3B8;margin-bottom:16px;">Rata-rata hari dari PO ke pengiriman</p>
-    <canvas id="procLeadChart" height="180"></canvas>
+    <div style="position:relative;height:180px;width:100%;">
+      <canvas id="procLeadChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+    </div>
   </div>
   <div class="card p-5">
     <p style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:16px;">Top Kategori Pengeluaran</p>
@@ -2178,11 +2184,15 @@
     <div class="col-span-2 card p-5">
       <p style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:4px;">Tren Kehadiran 30 Hari</p>
       <p style="font-size:11px;color:#94A3B8;margin-bottom:16px;">Hadir vs Alpha</p>
-      <canvas id="hrTrendChart" height="160"></canvas>
+      <div style="position:relative;height:180px;width:100%;">
+        <canvas id="hrTrendChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+      </div>
     </div>
     <div class="card p-5">
       <p style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:16px;">Distribusi Departemen</p>
-      <canvas id="hrDeptChart" height="160"></canvas>
+      <div style="position:relative;height:180px;width:100%;">
+        <canvas id="hrDeptChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+      </div>
     </div>
   </div>
 
@@ -2944,7 +2954,9 @@
         <!-- Attendance trend chart -->
         <div class="card p-4">
           <h3 style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:12px;">Tren Kehadiran Harian</h3>
-          <canvas id="trendChart" height="140"></canvas>
+          <div style="position:relative;height:160px;width:100%;">
+            <canvas id="trendChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+          </div>
         </div>
         <!-- GPS Live card -->
         <div class="card p-4">
@@ -3706,7 +3718,9 @@
       </div>
       <div class="card p-5 mb-5">
         <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:14px;">Tren Penggajian 12 Bulan</h3>
-        <canvas id="payrollChart" height="80"></canvas>
+        <div style="position:relative;height:160px;width:100%;">
+          <canvas id="payrollChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
+        </div>
       </div>
       <div class="card">
         <table class="w-full">
