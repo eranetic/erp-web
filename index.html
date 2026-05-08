@@ -263,18 +263,51 @@
     </button>
   </div>
 
-  <!-- Submenu items -->
+  <!-- Submenu items (supports flat items + nested subgroups) -->
   <nav class="flex-1 overflow-y-auto px-2 py-3 space-y-0.5" style="scrollbar-width:thin;scrollbar-color:#1E293B transparent;">
-    <template x-for="sub in (activeGroupData?activeGroupData.items:[])" :key="sub.module">
-      <button
-        @click="switchModule(sub.module)"
-        @mouseenter="if(currentModule!==sub.module){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}"
-        @mouseleave="if(currentModule!==sub.module){$el.style.background='';$el.style.color='#94A3B8'}"
-        class="sec-item w-full text-left px-3 py-2 rounded-lg block"
-        :class="currentModule===sub.module?'sec-item-active':''"
-        :style="currentModule===sub.module?'':'color:#94A3B8;'"
-        style="font-size:12px;"
-        x-text="sub.label"></button>
+    <template x-for="sub in (activeGroupData?activeGroupData.items:[])" :key="sub.key||sub.module">
+      <div>
+        <!-- Flat submenu item -->
+        <template x-if="sub.type!=='subgroup'">
+          <button
+            @click="switchModule(sub.module)"
+            @mouseenter="if(currentModule!==sub.module){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}"
+            @mouseleave="if(currentModule!==sub.module){$el.style.background='';$el.style.color='#94A3B8'}"
+            class="sec-item w-full text-left px-3 py-2 rounded-lg block"
+            :class="currentModule===sub.module?'sec-item-active':''"
+            :style="currentModule===sub.module?'font-size:12px;':'color:#94A3B8;font-size:12px;'"
+            x-text="sub.label"></button>
+        </template>
+
+        <!-- Subgroup with collapsible children -->
+        <template x-if="sub.type==='subgroup'">
+          <div>
+            <button
+              @click="toggleSubgroup(sub.key)"
+              @mouseenter="$el.style.background='rgba(255,255,255,.05)';$el.style.color='#E2E8F0'"
+              @mouseleave="$el.style.background='';$el.style.color='#7C8FA8'"
+              class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition"
+              style="color:#7C8FA8;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">
+              <svg class="flex-shrink-0 transition-transform duration-200" :class="subgroupOpen[sub.key]?'rotate-90':''" width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="flex-1 text-left truncate" x-text="sub.label"></span>
+            </button>
+            <div class="overflow-hidden transition-all duration-200 ease-in-out" :style="subgroupOpen[sub.key]?'max-height:400px':'max-height:0'">
+              <div class="ml-2 pl-2 mt-0.5 space-y-0.5" style="border-left:1px solid rgba(255,255,255,.06);">
+                <template x-for="c in sub.children" :key="c.module">
+                  <button
+                    @click="switchModule(c.module)"
+                    @mouseenter="if(currentModule!==c.module){$el.style.background='rgba(255,255,255,.05)';$el.style.color='#CBD5E1'}"
+                    @mouseleave="if(currentModule!==c.module){$el.style.background='';$el.style.color='#94A3B8'}"
+                    class="sec-item w-full text-left px-2.5 py-1.5 rounded-lg block"
+                    :class="currentModule===c.module?'sec-item-active':''"
+                    :style="currentModule===c.module?'font-size:12px;':'color:#94A3B8;font-size:12px;'"
+                    x-text="c.label"></button>
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
     </template>
   </nav>
 </aside>
@@ -2441,10 +2474,19 @@
         <button class="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors" style="background:#F1F5F9;font-size:12px;font-weight:500;color:#475569;" @mouseenter="$el.style.background='#E2E8F0'" @mouseleave="$el.style.background='#F1F5F9'">
           <ph-download-simple weight="bold" size="13"></ph-download-simple>Export
         </button>
-        <button class="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors" style="background:#7C3AED;font-size:12px;font-weight:600;color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.3);" @mouseenter="$el.style.background='#6D28D9'" @mouseleave="$el.style.background='#7C3AED'">
+        <button @click="window.__spa.switchModule('karyawan-baru')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors" style="background:#7C3AED;font-size:12px;font-weight:600;color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.3);" @mouseenter="$el.style.background='#6D28D9'" @mouseleave="$el.style.background='#7C3AED'">
           <ph-plus weight="bold" size="13"></ph-plus>Tambah Karyawan
         </button>
       </div>
+    </div>
+    <!-- Tab navigation -->
+    <div class="flex items-center gap-1 mt-3 -mb-2" style="border-bottom:1px solid #F1F5F9;">
+      <template x-for="t in tabs" :key="t.id">
+        <button @click="activeTab=t.id"
+          class="tab-btn px-4 py-2.5 transition-all" style="font-size:12.5px;color:#64748B;font-weight:500;"
+          :class="activeTab===t.id?'tab-active':''"
+          x-text="t.label"></button>
+      </template>
     </div>
   </div>
 
@@ -2483,13 +2525,13 @@
     <div class="card p-4 flex flex-wrap items-center gap-3">
       <div class="flex items-center gap-2 px-3 py-2 rounded-xl flex-1 min-w-[200px]" style="background:#F8FAFC;border:1px solid #E2E8F0;" onfocusin="this.style.borderColor='#BFDBFE';this.style.boxShadow='0 0 0 2px #EFF6FF'" onfocusout="this.style.borderColor='#E2E8F0';this.style.boxShadow='none'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#94A3B8" stroke-width="2"/><path d="m21 21-4.35-4.35" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/></svg>
-        <input type="text" placeholder="Cari nama, NIK, email..." class="bg-transparent border-0 outline-none flex-1" style="font-size:12.5px;color:#475569;"/>
+        <input x-model="searchQ" type="text" placeholder="Cari nama, NIK, email..." class="bg-transparent border-0 outline-none flex-1" style="font-size:12.5px;color:#475569;"/>
       </div>
-      <select class="px-3 py-2 rounded-xl pr-8 transition-all" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;outline:none;min-width:150px;">
-        <option>Semua Departemen</option><option>Engineering</option><option>IT</option><option>Produksi</option><option>HR &amp; GA</option><option>Finance</option><option>Marketing</option><option>Operasional</option>
+      <select x-model="filterDept" class="px-3 py-2 rounded-xl pr-8 transition-all" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;outline:none;min-width:150px;">
+        <option value="">Semua Departemen</option><option>Engineering</option><option>IT</option><option>Produksi</option><option>HR &amp; GA</option><option>Finance</option><option>Marketing</option><option>Operasional</option><option>Admin</option>
       </select>
-      <select class="px-3 py-2 rounded-xl pr-8 transition-all" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;outline:none;min-width:140px;">
-        <option>Semua Status</option><option>Aktif</option><option>Non-Aktif</option><option>Resign</option>
+      <select x-model="filterStatus" class="px-3 py-2 rounded-xl pr-8 transition-all" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;outline:none;min-width:140px;">
+        <option value="">Semua Status</option><option>Aktif</option><option>Non-Aktif</option><option>Resign</option>
       </select>
       <select class="px-3 py-2 rounded-xl pr-8 transition-all" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;outline:none;min-width:140px;">
         <option>Semua Kontrak</option><option>PKWTT (Tetap)</option><option>PKWT (Kontrak)</option><option>Magang</option>
@@ -2524,23 +2566,24 @@
               <th class="px-4 py-3 text-left" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">NIK</th>
               <th class="px-4 py-3 text-left" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Departemen</th>
               <th class="px-4 py-3 text-left" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Jabatan</th>
-              <th class="px-4 py-3 text-center" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Kontrak</th>
+              <th class="px-4 py-3 text-center" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tipe Kontrak</th>
               <th class="px-4 py-3 text-left" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tgl Bergabung</th>
+              <th class="px-4 py-3 text-left" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tgl Berakhir</th>
               <th class="px-4 py-3 text-center" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Status</th>
               <th class="px-4 py-3 text-center" style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Aksi</th>
             </tr>
           </thead>
           <tbody style="border-top:1px solid #F1F5F9;">
-            <template x-for="emp in employees" :key="emp.id">
-              <tr style="border-bottom:1px solid #F8FAFC;" :style="emp.contractAlert?'background:#FFFBEB':''">
-                <td class="px-4 py-3.5">
+            <template x-for="emp in filtered" :key="emp.id">
+              <tr style="border-bottom:1px solid #F8FAFC;cursor:pointer;" :style="emp.contractAlert?'background:#FFFBEB;cursor:pointer;':'cursor:pointer;'" @click="openDetail(emp)">
+                <td class="px-4 py-3.5" @click.stop>
                   <input type="checkbox" class="w-4 h-4 rounded" style="accent-color:#7C3AED;" :checked="selected.includes(emp.id)" @change="toggleSelect(emp.id)" />
                 </td>
                 <td class="px-4 py-3.5">
                   <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-white" style="font-size:12px;" :style="`background:${emp.avatarColor}`" x-text="emp.initials"></div>
                     <div>
-                      <a @click="window.__spa.switchModule('profil')" style="cursor:pointer;" class="block" style="font-size:12.5px;font-weight:600;color:#0F172A;text-decoration:none;" x-text="emp.name"></a>
+                      <p class="block" style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="emp.name"></p>
                       <p style="font-size:11px;color:#94A3B8;" x-text="emp.email"></p>
                     </div>
                     <span x-show="emp.contractAlert" class="ml-1 text-xs px-1.5 py-0.5 rounded-full" style="font-size:9.5px;background:#FEF3C7;color:#B45309;font-weight:700;border:1px solid #FDE68A;">⚠ Habis</span>
@@ -2553,12 +2596,13 @@
                   <span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="emp.contractType==='PKWTT'?'background:#ECFDF5;color:#166534;border:1px solid #BBF7D0':'background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA'" x-text="emp.contractType"></span>
                 </td>
                 <td class="px-4 py-3.5"><span style="font-size:12px;color:#64748B;" x-text="emp.joinDate"></span></td>
+                <td class="px-4 py-3.5"><span style="font-size:12px;" :style="emp.contractAlert?'color:#B45309;font-weight:600':'color:#64748B'" x-text="emp.endDate"></span></td>
                 <td class="px-4 py-3.5 text-center">
                   <span class="px-2.5 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="emp.status==='Aktif'?'background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0':'background:#F1F5F9;color:#64748B;border:1px solid #E2E8F0'" x-text="emp.status"></span>
                 </td>
-                <td class="px-4 py-3.5">
+                <td class="px-4 py-3.5" @click.stop>
                   <div class="flex items-center justify-center gap-1 row-actions">
-                    <a @click="window.__spa.switchModule('profil')" style="cursor:pointer;" class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors" style="color:#64748B;" title="Lihat Profil" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="currentColor" opacity=".2"/><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".5"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.5"/></svg></a>
+                    <button @click="openDetail(emp)" class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors" style="color:#64748B;" title="Lihat Detail" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="currentColor" opacity=".2"/><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".5"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.5"/></svg></button>
                     <button class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors" style="color:#64748B;" title="Edit" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><ph-pencil weight="duotone" size="14"></ph-pencil></button>
                     <button class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors" style="color:#64748B;" title="Lainnya" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><ph-dots-three weight="bold" size="14"></ph-dots-three></button>
                   </div>
@@ -2583,6 +2627,101 @@
             <option>20 / hal</option><option>50 / hal</option><option>100 / hal</option>
           </select>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide Panel Detail Karyawan -->
+  <div x-show="detailEmp" x-cloak class="fixed inset-0 z-[80]" @keydown.escape.window="closeDetail()">
+    <div class="absolute inset-0" style="background:rgba(15,23,42,.45);backdrop-filter:blur(2px);" @click="closeDetail()"></div>
+    <div x-show="detailEmp" x-cloak
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="translate-x-full"
+      x-transition:enter-end="translate-x-0"
+      class="absolute right-0 top-0 h-full bg-white shadow-2xl flex flex-col" style="width:480px;">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid #E2E8F0;">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0" style="font-size:14px;" :style="`background:${detailEmp?.avatarColor}`" x-text="detailEmp?.initials"></div>
+          <div class="min-w-0">
+            <p class="truncate" style="font-size:14px;font-weight:700;color:#0F172A;" x-text="detailEmp?.name"></p>
+            <p style="font-size:11.5px;color:#94A3B8;" x-text="detailEmp?.role + ' · ' + detailEmp?.dept"></p>
+          </div>
+        </div>
+        <button @click="closeDetail()" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''">
+          <ph-x weight="bold" size="16"></ph-x>
+        </button>
+      </div>
+      <!-- Tabs -->
+      <div class="flex items-center gap-1 px-5" style="border-bottom:1px solid #F1F5F9;">
+        <template x-for="t in detailTabs" :key="t.id">
+          <button @click="detailTab=t.id" class="tab-btn px-3 py-2.5" style="font-size:12px;color:#64748B;font-weight:500;" :class="detailTab===t.id?'tab-active':''" x-text="t.label"></button>
+        </template>
+      </div>
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto px-5 py-4">
+        <!-- Info Pribadi -->
+        <div x-show="detailTab==='info'" class="space-y-3">
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">NIK</p><p class="num" style="font-size:13px;color:#0F172A;font-family:monospace;" x-text="detailEmp?.nik"></p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Email</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.email"></p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">No HP</p><p style="font-size:13px;color:#0F172A;">+62 812-3456-7890</p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Alamat</p><p style="font-size:13px;color:#374151;">Jl. Mawar No. 12, Jakarta Selatan</p></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tgl Lahir</p><p style="font-size:13px;color:#0F172A;">15 Aug 1990</p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Gender</p><p style="font-size:13px;color:#0F172A;">Laki-laki</p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Agama</p><p style="font-size:13px;color:#0F172A;">Islam</p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Status PTKP</p><p style="font-size:13px;color:#0F172A;">K/1</p></div>
+          </div>
+        </div>
+        <!-- Pekerjaan -->
+        <div x-show="detailTab==='pekerjaan'" class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Departemen</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.dept"></p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Jabatan</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.role"></p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tipe Kontrak</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.contractType"></p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Status</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.status"></p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tgl Bergabung</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.joinDate"></p></div>
+            <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Tgl Berakhir</p><p style="font-size:13px;color:#0F172A;" x-text="detailEmp?.endDate"></p></div>
+          </div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Atasan Langsung</p><p style="font-size:13px;color:#0F172A;">Siti Rahayu — HR Manager</p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">Lokasi Kerja</p><p style="font-size:13px;color:#0F172A;">Kantor Pusat Jakarta</p></div>
+        </div>
+        <!-- Kompensasi -->
+        <div x-show="detailTab==='kompensasi'" class="space-y-3">
+          <div class="card p-4" style="background:#F5F3FF;border-color:#DDD6FE;">
+            <p style="font-size:11.5px;color:#6D28D9;font-weight:600;">Gaji Pokok</p>
+            <p class="num" style="font-size:20px;font-weight:800;color:#5B21B6;letter-spacing:-.4px;" x-text="detailEmp?.gapok"></p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="card p-3"><p style="font-size:10.5px;color:#94A3B8;font-weight:600;">Tunjangan Jabatan</p><p class="num" style="font-size:14px;font-weight:700;color:#0F172A;">Rp 2.500.000</p></div>
+            <div class="card p-3"><p style="font-size:10.5px;color:#94A3B8;font-weight:600;">Tunjangan Transport</p><p class="num" style="font-size:14px;font-weight:700;color:#0F172A;">Rp 1.500.000</p></div>
+            <div class="card p-3"><p style="font-size:10.5px;color:#94A3B8;font-weight:600;">Tunjangan Makan</p><p class="num" style="font-size:14px;font-weight:700;color:#0F172A;">Rp 1.200.000</p></div>
+            <div class="card p-3"><p style="font-size:10.5px;color:#94A3B8;font-weight:600;">BPJS (Karyawan)</p><p class="num" style="font-size:14px;font-weight:700;color:#DC2626;">— Rp 555.000</p></div>
+          </div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">No NPWP</p><p style="font-size:13px;color:#0F172A;font-family:monospace;">12.345.678.9-012.000</p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;">No Rekening</p><p style="font-size:13px;color:#0F172A;font-family:monospace;">BCA · 1234567890</p></div>
+        </div>
+        <!-- Riwayat -->
+        <div x-show="detailTab==='riwayat'" class="space-y-2.5">
+          <template x-for="r in [
+            {tgl:'15 Apr 2024',ev:'Promosi Jabatan',det:'Junior → Senior Engineer',color:'#7C3AED'},
+            {tgl:'1 Jan 2024',ev:'Kenaikan Gaji',det:'+ 10% (Annual review)',color:'#059669'},
+            {tgl:'12 Mar 2019',ev:'Bergabung',det:'Junior Engineer · PKWTT',color:'#2563EB'},
+          ]" :key="r.tgl">
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background:#F8FAFC;border:1px solid #E2E8F0;">
+              <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" :style="`background:${r.color}`"></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between"><p style="font-size:12.5px;font-weight:700;color:#0F172A;" x-text="r.ev"></p><p style="font-size:11px;color:#94A3B8;" x-text="r.tgl"></p></div>
+                <p style="font-size:11.5px;color:#64748B;margin-top:2px;" x-text="r.det"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="px-5 py-3 flex items-center justify-end gap-2" style="border-top:1px solid #E2E8F0;background:#F8FAFC;">
+        <button @click="closeDetail()" class="px-4 py-2 rounded-xl" style="background:#fff;color:#475569;font-size:12.5px;font-weight:600;border:1px solid #E2E8F0;">Tutup</button>
+        <button class="px-4 py-2 rounded-xl text-white flex items-center gap-1.5" style="background:#7C3AED;font-size:12.5px;font-weight:600;"><ph-pencil weight="bold" size="13"></ph-pencil>Edit Karyawan</button>
       </div>
     </div>
   </div>
@@ -3040,11 +3179,20 @@
             <option>Semua Departemen</option><option>Engineering</option><option>IT</option><option>Finance</option><option>HRD</option>
           </select>
         </div>
+        <button @click="lockPeriod()" class="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors" style="background:#F1F5F9;font-size:12.5px;font-weight:600;color:#475569;" @mouseenter="$el.style.background='#E2E8F0'" @mouseleave="$el.style.background='#F1F5F9'">
+          <ph-lock-key weight="duotone" size="14"></ph-lock-key>Kunci Periode
+        </button>
         <button class="flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-all hover:opacity-90" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:12.5px;font-weight:600;box-shadow:0 3px 10px rgba(124,58,237,.35);">
           <ph-download-simple weight="bold" size="14" color="white"></ph-download-simple>Export Rekap
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- Toast lock -->
+  <div x-show="lockedToast" x-cloak x-transition class="fixed top-20 right-6 z-[90] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg" style="background:#0F172A;color:#fff;font-size:12.5px;">
+    <ph-lock-key weight="duotone" size="16" color="#A78BFA"></ph-lock-key>
+    <span>Periode April 2026 berhasil dikunci. Tidak ada lagi koreksi absensi.</span>
   </div>
 
   <div class="p-6 space-y-5">
@@ -3180,6 +3328,12 @@
           <button @click="activeTab='lembur'" :class="activeTab==='lembur'?'tab-active':''" class="tab-btn" style="font-size:13px;color:#64748B;background:none;border:none;cursor:pointer;padding-bottom:10px;">
             Lembur
           </button>
+          <button @click="activeTab='mingguan'" :class="activeTab==='mingguan'?'tab-active':''" class="tab-btn" style="font-size:13px;color:#64748B;background:none;border:none;cursor:pointer;padding-bottom:10px;">
+            Rekap Mingguan
+          </button>
+          <button @click="activeTab='bulanan'" :class="activeTab==='bulanan'?'tab-active':''" class="tab-btn" style="font-size:13px;color:#64748B;background:none;border:none;cursor:pointer;padding-bottom:10px;">
+            Rekap Bulanan
+          </button>
           <div class="ml-auto flex items-center gap-2 pb-2">
             <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background:#F8FAFC;border:1px solid #E2E8F0;">
               <ph-magnifying-glass weight="regular" size="13" color="#94A3B8"></ph-magnifying-glass>
@@ -3203,6 +3357,7 @@
               <th class="text-left px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">CHECK IN</th>
               <th class="text-left px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">CHECK OUT</th>
               <th class="text-left px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">DURASI</th>
+              <th class="text-left px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">METODE</th>
               <th class="text-left px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">LOKASI</th>
               <th class="px-4 py-2.5"></th>
             </tr>
@@ -3228,6 +3383,11 @@
                 <td class="px-4 py-3 num" style="font-size:12.5px;color:#374151;font-weight:500;" x-text="r.in"></td>
                 <td class="px-4 py-3 num" style="font-size:12.5px;color:#374151;font-weight:500;" x-text="r.out"></td>
                 <td class="px-4 py-3 num" style="font-size:12.5px;color:#475569;" x-text="r.dur"></td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="(r.method||'Fingerprint')==='Face'?'background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE':(r.method||'Fingerprint')==='Manual'?'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A':'background:#F0FDF4;color:#166534;border:1px solid #BBF7D0'">
+                    <span x-text="r.method||'Fingerprint'"></span>
+                  </span>
+                </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-1.5">
                     <span x-show="r.gps==='in'" class="w-2 h-2 rounded-full inline-block" style="background:#10B981;"></span>
@@ -3358,6 +3518,106 @@
         </table>
       </div>
     </div>
+
+      <!-- Rekap Mingguan -->
+      <div x-show="activeTab==='mingguan'" x-cloak class="card overflow-hidden">
+        <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid #F1F5F9;">
+          <div>
+            <p style="font-size:13px;font-weight:700;color:#0F172A;">Rekap Mingguan — April 2026</p>
+            <p style="font-size:11.5px;color:#94A3B8;">Total kehadiran per karyawan dalam 4 minggu terakhir</p>
+          </div>
+          <select class="px-3 py-1.5 rounded-lg pr-7" style="font-size:12px;color:#374151;background:#F8FAFC;border:1px solid #E2E8F0;">
+            <option>Minggu Ini</option><option>Minggu Lalu</option><option>2 Minggu Lalu</option><option>3 Minggu Lalu</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <th class="text-left px-5 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">KARYAWAN</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">SEN</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">SEL</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">RAB</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">KAM</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">JUM</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">TOTAL</th>
+                <th class="text-center px-3 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">JAM KERJA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="(r,i) in logData.slice(0,8)" :key="r.id">
+                <tr style="border-bottom:1px solid #F8FAFC;">
+                  <td class="px-5 py-3">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center" :style="`background:${r.avatarBg}`"><span style="font-size:10px;font-weight:700;color:#fff;" x-text="r.initials"></span></div>
+                      <div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p><p style="font-size:11px;color:#94A3B8;" x-text="r.dept"></p></div>
+                    </div>
+                  </td>
+                  <template x-for="d in 5" :key="d">
+                    <td class="text-center px-3 py-3">
+                      <span class="inline-block w-7 h-7 rounded-lg flex items-center justify-center" :style="(i+d)%7===0?'background:#FEE2E2;color:#991B1B':(i+d)%5===0?'background:#FEF3C7;color:#92400E':'background:#D1FAE5;color:#065F46'" style="font-size:11px;font-weight:700;" x-text="(i+d)%7===0?'A':(i+d)%5===0?'T':'H'"></span>
+                    </td>
+                  </template>
+                  <td class="text-center px-3 py-3"><span class="num" style="font-size:12.5px;font-weight:700;color:#0F172A;">5</span></td>
+                  <td class="text-center px-3 py-3 num" style="font-size:12px;color:#475569;">42j 30m</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rekap Bulanan -->
+      <div x-show="activeTab==='bulanan'" x-cloak class="card overflow-hidden">
+        <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid #F1F5F9;">
+          <div>
+            <p style="font-size:13px;font-weight:700;color:#0F172A;">Rekap Bulanan — April 2026</p>
+            <p style="font-size:11.5px;color:#94A3B8;">Akumulasi total kehadiran sebulan penuh</p>
+          </div>
+          <button class="flex items-center gap-1.5 px-3 py-2 rounded-lg" style="background:#F1F5F9;font-size:12px;font-weight:500;color:#475569;">
+            <ph-download-simple weight="bold" size="13"></ph-download-simple>Export PDF
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <th class="text-left px-5 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">KARYAWAN</th>
+                <th class="text-left px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">DEPARTEMEN</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">HARI KERJA</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">HADIR</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">TELAT</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">ALPHA</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">IZIN/SAKIT</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">LEMBUR</th>
+                <th class="text-center px-4 py-2.5" style="font-size:11px;font-weight:700;color:#94A3B8;">% KEHADIRAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="r in logData" :key="r.id">
+                <tr style="border-bottom:1px solid #F8FAFC;">
+                  <td class="px-5 py-3">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center" :style="`background:${r.avatarBg}`"><span style="font-size:10px;font-weight:700;color:#fff;" x-text="r.initials"></span></div>
+                      <div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p><p style="font-size:11px;color:#94A3B8;" x-text="r.nik"></p></div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3" style="font-size:12.5px;color:#475569;" x-text="r.dept"></td>
+                  <td class="text-center px-4 py-3 num" style="font-size:12.5px;color:#475569;">22</td>
+                  <td class="text-center px-4 py-3 num" style="font-size:12.5px;font-weight:700;color:#16A34A;" x-text="r.status==='Alpha'?20:21"></td>
+                  <td class="text-center px-4 py-3 num" style="font-size:12.5px;color:#D97706;" x-text="r.status==='Telat'?2:1"></td>
+                  <td class="text-center px-4 py-3 num" style="font-size:12.5px;color:#DC2626;" x-text="r.status==='Alpha'?2:0"></td>
+                  <td class="text-center px-4 py-3 num" style="font-size:12.5px;color:#475569;">0</td>
+                  <td class="text-center px-4 py-3 num" style="font-size:12.5px;color:#475569;">8j</td>
+                  <td class="text-center px-4 py-3">
+                    <span class="px-2 py-0.5 rounded-full" style="font-size:11px;font-weight:600;" :style="r.status==='Alpha'?'background:#FEF3C7;color:#92400E':'background:#D1FAE5;color:#065F46'" x-text="r.status==='Alpha'?'91%':'98%'"></span>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
   </div>
 </div>
 
@@ -3682,7 +3942,9 @@
                 <div class="pl-6 space-y-2">
                   <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">PPh 21</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 38.420.000</span></div>
                   <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">BPJS Kesehatan (1%)</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 8.001.000</span></div>
-                  <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">BPJS Ketenagakerjaan (2%)</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 16.002.000</span></div>
+                  <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">BPJS TK — JHT (2%)</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 16.002.000</span></div>
+                  <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">BPJS TK — JP (1%)</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 8.001.000</span></div>
+                  <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">Tapera (0,5%)</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 4.000.500</span></div>
                   <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">Cicilan Pinjaman</span><span class="num" style="font-size:12px;font-weight:600;color:#D97706;">Rp 3.000.000</span></div>
                   <div class="flex justify-between"><span style="font-size:12px;color:#64748B;">Potongan Alpha/Izin Tanpa Keterangan</span><span class="num" style="font-size:12px;font-weight:600;color:#374151;">Rp 9.427.000</span></div>
                 </div>
@@ -3715,6 +3977,44 @@
                   <p style="font-size:11.5px;color:#1E40AF;font-weight:600;">Total Beban Perusahaan</p>
                   <p class="num" style="font-size:15px;font-weight:800;color:#1E40AF;margin-top:4px;">Rp 786.858.000</p>
                 </div>
+              </div>
+            </div>
+            <!-- Detail komponen per karyawan -->
+            <div class="card overflow-hidden">
+              <div class="px-5 py-3 flex items-center justify-between" style="border-bottom:1px solid #F1F5F9;">
+                <div class="flex items-center gap-2">
+                  <ph-list-numbers weight="duotone" size="16" color="#7C3AED"></ph-list-numbers>
+                  <h3 style="font-size:13px;font-weight:700;color:#0F172A;">Detail Komponen per Karyawan</h3>
+                </div>
+                <p style="font-size:11px;color:#94A3B8;">Formula: NET = Bruto − (PPh21 + BPJS Kes + BPJS TK + Tapera + Cicilan)</p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr style="background:#F8FAFC;">
+                      <th class="text-left px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+                      <th class="text-right px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">BRUTO</th>
+                      <th class="text-right px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">PPh21</th>
+                      <th class="text-right px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">BPJS KES</th>
+                      <th class="text-right px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">BPJS TK</th>
+                      <th class="text-right px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TAPERA</th>
+                      <th class="text-right px-3 py-2.5" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">NET</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="e in payrollDetail" :key="e.id">
+                      <tr class="slip-row" style="border-bottom:1px solid #F8FAFC;">
+                        <td class="px-3 py-2.5" style="font-size:12px;color:#0F172A;font-weight:500;" x-text="e.name"></td>
+                        <td class="text-right px-3 py-2.5 num" style="font-size:11.5px;color:#374151;" x-text="e.bruto"></td>
+                        <td class="text-right px-3 py-2.5 num" style="font-size:11.5px;color:#475569;" x-text="e.pph"></td>
+                        <td class="text-right px-3 py-2.5 num" style="font-size:11.5px;color:#475569;" x-text="e.bpjsKes"></td>
+                        <td class="text-right px-3 py-2.5 num" style="font-size:11.5px;color:#475569;" x-text="e.bpjsTk"></td>
+                        <td class="text-right px-3 py-2.5 num" style="font-size:11.5px;color:#475569;" x-text="e.tapera"></td>
+                        <td class="text-right px-3 py-2.5 num" style="font-size:12px;font-weight:700;color:#7C3AED;" x-text="e.net"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -3949,7 +4249,7 @@
     <p style="font-size:13px;color:#64748B;margin-bottom:20px;">Payroll April 2026 telah dikirim ke Manager HRD untuk approval. Notifikasi telah dikirim ke email.</p>
     <div class="flex gap-2">
       <button @click="showSuccess=false;wizStep=1" class="flex-1 py-2.5 rounded-xl font-semibold" style="background:#F1F5F9;color:#475569;font-size:13px;">Tutup</button>
-      <button @click="showSuccess=false;viewMode='history'" class="flex-1 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;">Lihat Riwayat</button>
+      <button @click="showSuccess=false;window.__spa.switchModule('payroll-slip')" class="flex-1 py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-1.5" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;"><ph-receipt weight="bold" size="14"></ph-receipt>Lihat Slip Gaji</button>
     </div>
   </div>
 </div>
@@ -11200,12 +11500,960 @@
 
 
 
+<!-- ═══════════════════════════════════════════════════════════════════
+     ═══ HR & PAYROLL — NEW MODULES ═══
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<!-- ═══ MODULE: TAMBAH KARYAWAN BARU ═══ -->
+<div x-show="currentModule==='karyawan-baru'" x-cloak x-data="mod_karyawan_baru()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <p style="font-size:13.5px;font-weight:700;color:#0F172A;">Tambah Karyawan Baru</p>
+  <div class="flex-1"></div>
+  <button @click="window.__spa.switchModule('karyawan')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style="background:#F1F5F9;font-size:12px;font-weight:500;color:#475569;"><ph-arrow-left weight="bold" size="13"></ph-arrow-left>Kembali</button>
+</header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;">
+      <span>Dashboard</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Karyawan</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span style="color:#7C3AED;font-weight:600;">Tambah Baru</span>
+    </nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Tambah Karyawan Baru</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Lengkapi data karyawan dalam 3 langkah</p>
+  </div>
+
+  <!-- Toast -->
+  <div x-show="toast" x-cloak x-transition class="fixed top-20 right-6 z-[90] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg" style="background:#059669;color:#fff;font-size:12.5px;">
+    <ph-check-circle weight="duotone" size="16" color="#A7F3D0"></ph-check-circle>
+    <span>Karyawan berhasil ditambahkan</span>
+  </div>
+
+  <div class="p-6">
+    <!-- Step Indicator -->
+    <div class="card p-5 mb-5">
+      <div class="flex items-center">
+        <template x-for="(s,i) in steps" :key="s.id">
+          <div class="flex items-center" :style="i<steps.length-1?'flex:1':''">
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="step-circle" :class="step>s.id?'step-done':step===s.id?'step-active':'step-pending'">
+                <template x-if="step>s.id"><ph-check weight="bold" size="14" color="white"></ph-check></template>
+                <template x-if="step<=s.id"><span x-text="s.id"></span></template>
+              </div>
+              <p :style="`font-size:11.5px;font-weight:${step===s.id?700:500};color:${step===s.id?'#7C3AED':step>s.id?'#10B981':'#94A3B8'}`" x-text="s.label"></p>
+              <p :style="`font-size:10px;color:${step===s.id?'#A78BFA':'#CBD5E1'};text-align:center;max-width:120px;`" x-text="s.sub"></p>
+            </div>
+            <div x-show="i<steps.length-1" class="step-line flex-1 mx-2 mb-6" :style="`background:${step>s.id?'#A78BFA':'#E2E8F0'}`"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Step 1 — Data Pribadi -->
+    <div x-show="step===1" class="card p-6 max-w-3xl mx-auto">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:18px;" class="flex items-center gap-2"><ph-user weight="duotone" size="18" color="#7C3AED"></ph-user>Data Pribadi</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">NIK <span style="color:#94A3B8;font-weight:400;">(auto-generate)</span></label><input type="text" value="SMS-247-2026" disabled class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#94A3B8;background:#F8FAFC;font-family:monospace;"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Nama Lengkap <span style="color:#EF4444;">*</span></label><input x-model="form.nama" type="text" placeholder="Nama lengkap sesuai KTP" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tempat Lahir</label><input x-model="form.tempat" type="text" placeholder="Kota tempat lahir" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tanggal Lahir</label><input x-model="form.tgl" type="date" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <div class="col-span-2">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Gender</label>
+          <div class="flex items-center gap-5">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" value="L" x-model="form.gender" style="accent-color:#7C3AED;"/><span style="font-size:13px;color:#374151;">Laki-laki</span></label>
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" value="P" x-model="form.gender" style="accent-color:#7C3AED;"/><span style="font-size:13px;color:#374151;">Perempuan</span></label>
+          </div>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Agama</label><select x-model="form.agama" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>Islam</option><option>Kristen Protestan</option><option>Kristen Katolik</option><option>Hindu</option><option>Buddha</option><option>Konghucu</option></select></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">No HP</label><input x-model="form.hp" type="text" placeholder="08xx-xxxx-xxxx" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Email</label><input x-model="form.email" type="email" placeholder="contoh@email.com" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+      </div>
+      <div class="flex justify-end mt-6">
+        <button @click="step=2" class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);">Lanjut <ph-arrow-right weight="bold" size="15" color="white"></ph-arrow-right></button>
+      </div>
+    </div>
+
+    <!-- Step 2 — Data Pekerjaan -->
+    <div x-show="step===2" x-cloak class="card p-6 max-w-3xl mx-auto">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:18px;" class="flex items-center gap-2"><ph-briefcase weight="duotone" size="18" color="#7C3AED"></ph-briefcase>Data Pekerjaan</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Entitas PT</label><select x-model="form.entitas" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>PT Surya Multi Sejahtera</option><option>PT Surya Properti Nusantara</option><option>CV Surya Logistik</option><option>HS Rokok</option></select></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Departemen</label><select x-model="form.dept" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>Engineering</option><option>IT</option><option>Finance</option><option>HR &amp; GA</option><option>Marketing</option><option>Produksi</option><option>Operasional</option><option>Admin</option></select></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Jabatan</label><input x-model="form.jabatan" type="text" placeholder="Posisi / Jabatan" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div class="col-span-2">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Tipe Kontrak</label>
+          <div class="flex items-center gap-5">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="kontrak" value="PKWTT" x-model="form.kontrak" style="accent-color:#7C3AED;"/><span style="font-size:13px;color:#374151;">PKWTT (Tetap)</span></label>
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="kontrak" value="PKWT" x-model="form.kontrak" style="accent-color:#7C3AED;"/><span style="font-size:13px;color:#374151;">PKWT (Kontrak)</span></label>
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="kontrak" value="Magang" x-model="form.kontrak" style="accent-color:#7C3AED;"/><span style="font-size:13px;color:#374151;">Magang</span></label>
+          </div>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tanggal Mulai</label><input x-model="form.mulai" type="date" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <div x-show="form.kontrak==='PKWT'||form.kontrak==='Magang'"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tanggal Berakhir</label><input x-model="form.berakhir" type="date" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Golongan Gaji</label><select x-model="form.golongan" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>I — Staff</option><option>II — Senior Staff</option><option>III — Supervisor</option><option>IV — Manager</option><option>V — Senior Manager</option></select></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Gaji Pokok (Rp)</label><input x-model="form.gapok" type="text" placeholder="Rp 0" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+      </div>
+      <div class="flex justify-between mt-6">
+        <button @click="step=1" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold" style="background:#F1F5F9;color:#475569;font-size:13px;"><ph-arrow-left weight="bold" size="15"></ph-arrow-left>Kembali</button>
+        <button @click="step=3" class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);">Lanjut <ph-arrow-right weight="bold" size="15" color="white"></ph-arrow-right></button>
+      </div>
+    </div>
+
+    <!-- Step 3 — Akun & Dokumen -->
+    <div x-show="step===3" x-cloak class="card p-6 max-w-3xl mx-auto">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:18px;" class="flex items-center gap-2"><ph-identification-card weight="duotone" size="18" color="#7C3AED"></ph-identification-card>Akun &amp; Dokumen</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">No NPWP</label><input x-model="form.npwp" type="text" placeholder="00.000.000.0-000.000" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;font-family:monospace;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Bank</label><select x-model="form.bank" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>BCA</option><option>Mandiri</option><option>BNI</option><option>BRI</option><option>CIMB Niaga</option><option>Permata</option></select></div>
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">No Rekening</label><input x-model="form.rek" type="text" placeholder="Nomor rekening" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;font-family:monospace;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Email Akun Sistem</label><input x-model="form.emailSistem" type="email" placeholder="username@sms.co.id" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+      </div>
+      <div class="flex justify-between mt-6">
+        <button @click="step=2" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold" style="background:#F1F5F9;color:#475569;font-size:13px;"><ph-arrow-left weight="bold" size="15"></ph-arrow-left>Kembali</button>
+        <button @click="save()" class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);"><ph-check weight="bold" size="15" color="white"></ph-check>Simpan Karyawan</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: ONBOARDING & OFFBOARDING ═══ -->
+<div x-show="currentModule==='karyawan-onboard'" x-cloak x-data="mod_karyawan_onboard()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <p style="font-size:13.5px;font-weight:700;color:#0F172A;">Onboarding &amp; Offboarding</p>
+  <div class="flex-1"></div>
+</header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;">
+      <span>Dashboard</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span style="color:#7C3AED;font-weight:600;">Onboarding &amp; Offboarding</span>
+    </nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Onboarding &amp; Offboarding</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Pantau proses karyawan baru bergabung &amp; karyawan keluar</p>
+    <div class="flex items-center gap-1 mt-3 -mb-2" style="border-bottom:1px solid #F1F5F9;">
+      <button @click="tab='onboard'" class="tab-btn px-4 py-2.5" style="font-size:12.5px;color:#64748B;font-weight:500;" :class="tab==='onboard'?'tab-active':''">Onboarding</button>
+      <button @click="tab='offboard'" class="tab-btn px-4 py-2.5" style="font-size:12.5px;color:#64748B;font-weight:500;" :class="tab==='offboard'?'tab-active':''">Offboarding</button>
+    </div>
+  </div>
+  <div class="p-6 fade-up">
+    <!-- Onboarding -->
+    <div x-show="tab==='onboard'" class="grid grid-cols-2 gap-4">
+      <template x-for="o in onboarding" :key="o.id">
+        <div class="card p-5">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0" style="font-size:13px;" :style="`background:${o.color}`" x-text="o.initials"></div>
+            <div class="flex-1 min-w-0">
+              <p style="font-size:14px;font-weight:700;color:#0F172A;" x-text="o.name"></p>
+              <p style="font-size:11.5px;color:#94A3B8;" x-text="o.role + ' · ' + o.dept"></p>
+              <p style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:2px;" x-text="'Bergabung ' + o.joinDate + ' · ' + o.daysLeft + ' hari'"></p>
+            </div>
+            <span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:700;" :style="o.progress>=80?'background:#ECFDF5;color:#065F46':o.progress>=40?'background:#FFFBEB;color:#92400E':'background:#FEF2F2;color:#991B1B'"><span x-text="o.progress + '%'"></span></span>
+          </div>
+          <div class="prog-bar mb-4"><div class="prog-fill" :style="`width:${o.progress}%;background:linear-gradient(90deg,#7C3AED,#A78BFA);`"></div></div>
+          <div class="space-y-2">
+            <template x-for="(c,i) in o.checks" :key="i">
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" x-model="c.done" @change="updateProg(o)" class="w-4 h-4 rounded" style="accent-color:#7C3AED;"/>
+                <span :style="`font-size:12.5px;color:${c.done?'#94A3B8':'#374151'};${c.done?'text-decoration:line-through':''}`" x-text="c.label"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Offboarding -->
+    <div x-show="tab==='offboard'" x-cloak class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TGL KELUAR</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">ALASAN</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">ASET</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">CLEARANCE</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">EXIT INT.</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">PAKLARING</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSES</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="o in offboarding" :key="o.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${o.color}`" x-text="o.initials"></div><div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="o.name"></p><p style="font-size:11px;color:#94A3B8;" x-text="o.role"></p></div></div></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#64748B;" x-text="o.exitDate"></td>
+              <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="o.reason==='Resign'?'background:#FFFBEB;color:#92400E':o.reason==='PHK'?'background:#FEF2F2;color:#991B1B':'background:#EFF6FF;color:#1D4ED8'" x-text="o.reason"></span></td>
+              <template x-for="k in ['aset','clearance','exit','paklaring','akses']" :key="k">
+                <td class="text-center px-4 py-3"><span x-show="o[k]" class="inline-block w-5 h-5 rounded-full" style="background:#10B981;display:inline-flex;align-items:center;justify-content:center;"><ph-check weight="bold" size="10" color="white"></ph-check></span><span x-show="!o[k]" class="inline-block w-5 h-5 rounded-full" style="background:#FEE2E2;color:#991B1B;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">—</span></td>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: TEGURAN & DISIPLIN ═══ -->
+<div x-show="currentModule==='karyawan-disiplin'" x-cloak x-data="mod_karyawan_disiplin()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <p style="font-size:13.5px;font-weight:700;color:#0F172A;">Teguran &amp; Disiplin</p>
+  <div class="flex-1"></div>
+</header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;">
+      <span>Dashboard</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span style="color:#7C3AED;font-weight:600;">Teguran &amp; Disiplin</span>
+    </nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Teguran &amp; Disiplin</h1>
+    <div class="flex items-center gap-1 mt-3 -mb-2" style="border-bottom:1px solid #F1F5F9;">
+      <button @click="tab='daftar'" class="tab-btn px-4 py-2.5" style="font-size:12.5px;color:#64748B;font-weight:500;" :class="tab==='daftar'?'tab-active':''">Daftar SP</button>
+      <button @click="tab='tambah'" class="tab-btn px-4 py-2.5" style="font-size:12.5px;color:#64748B;font-weight:500;" :class="tab==='tambah'?'tab-active':''">Tambah SP</button>
+    </div>
+  </div>
+
+  <div x-show="toast" x-cloak class="fixed top-20 right-6 z-[90] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg" style="background:#0F172A;color:#fff;font-size:12.5px;"><ph-check-circle weight="duotone" size="16" color="#A7F3D0"></ph-check-circle><span>Surat Peringatan berhasil disimpan</span></div>
+
+  <div class="p-6 space-y-4 fade-up">
+    <div x-show="tab==='daftar'">
+      <!-- KPIs -->
+      <div class="grid grid-cols-4 gap-4 mb-4">
+        <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#FFFBEB;"><ph-warning-circle weight="duotone" size="22" color="#D97706"></ph-warning-circle></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">5</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">SP1 Aktif</p></div></div>
+        <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#FFF7ED;"><ph-warning weight="duotone" size="22" color="#EA580C"></ph-warning></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">2</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">SP2 Aktif</p></div></div>
+        <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#FEF2F2;"><ph-x-circle weight="duotone" size="22" color="#DC2626"></ph-x-circle></div><div><p class="num" style="font-size:24px;font-weight:800;color:#DC2626;line-height:1;">1</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">SP3</p></div></div>
+        <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#F5F3FF;"><ph-clipboard-text weight="duotone" size="22" color="#7C3AED"></ph-clipboard-text></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">8</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Total Bulan Ini</p></div></div>
+      </div>
+      <!-- Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto"><table class="w-full">
+          <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+            <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TGL</th>
+            <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+            <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">JENIS SP</th>
+            <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">PELANGGARAN</th>
+            <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+            <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+          </tr></thead>
+          <tbody>
+            <template x-for="r in records" :key="r.id">
+              <tr style="border-bottom:1px solid #F8FAFC;">
+                <td class="px-5 py-3" style="font-size:12px;color:#475569;" x-text="r.tgl"></td>
+                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${r.color}`" x-text="r.initials"></div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p></div></td>
+                <td class="px-4 py-3 text-center"><span class="px-2.5 py-0.5 rounded-full" style="font-size:10.5px;font-weight:700;" :style="r.jenis==='SP1'?'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A':r.jenis==='SP2'?'background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA':'background:#FEF2F2;color:#991B1B;border:1px solid #FECACA'" x-text="r.jenis"></span></td>
+                <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.pelanggaran"></td>
+                <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="r.status==='Aktif'?'background:#FEF2F2;color:#991B1B':'background:#F1F5F9;color:#64748B'" x-text="r.status"></span></td>
+                <td class="px-4 py-3 text-center"><button class="w-7 h-7 rounded-lg" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><ph-eye weight="duotone" size="14"></ph-eye></button></td>
+              </tr>
+            </template>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div x-show="tab==='tambah'" x-cloak class="card p-6 max-w-3xl">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:18px;" class="flex items-center gap-2"><ph-clipboard-text weight="duotone" size="18" color="#7C3AED"></ph-clipboard-text>Form Surat Peringatan Baru</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Karyawan <span style="color:#EF4444;">*</span></label><select x-model="form.emp" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>Pilih karyawan…</option><option>Andi Prasetyo</option><option>Reza Firmansyah</option><option>Budi Santoso</option></select></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Jenis SP <span style="color:#EF4444;">*</span></label><select x-model="form.jenis" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>SP1</option><option>SP2</option><option>SP3</option></select></div>
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Kategori Pelanggaran</label><select x-model="form.kategori" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>Keterlambatan Berulang</option><option>Mangkir / Alpha</option><option>Pelanggaran SOP</option><option>Pelanggaran Etika</option><option>Tidak Sesuai Kinerja</option></select></div>
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Deskripsi Pelanggaran</label><textarea x-model="form.desc" rows="3" placeholder="Detail pelanggaran yang dilakukan…" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"></textarea></div>
+        <div class="col-span-2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Saksi (opsional)</label><input x-model="form.saksi" type="text" placeholder="Nama saksi" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+      </div>
+      <div class="flex justify-end mt-6 gap-2">
+        <button @click="tab='daftar'" class="px-5 py-2.5 rounded-xl font-semibold" style="background:#F1F5F9;color:#475569;font-size:13px;">Batal</button>
+        <button @click="save()" class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);"><ph-check weight="bold" size="15" color="white"></ph-check>Simpan SP</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: REKRUTMEN — LOWONGAN AKTIF ═══ -->
+<div x-show="currentModule==='rekrutmen-lowongan'" x-cloak x-data="mod_rekrutmen_lowongan()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Lowongan Aktif</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>Dashboard</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span>Rekrutmen</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Lowongan Aktif</span></nav>
+    <div class="flex items-center justify-between">
+      <div><h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Lowongan Aktif</h1><p style="font-size:12px;color:#64748B;margin-top:2px;">Kelola posisi lowongan yang sedang dibuka</p></div>
+      <button class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white" style="background:#7C3AED;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(124,58,237,.3);"><ph-plus weight="bold" size="13"></ph-plus>Buka Lowongan</button>
+    </div>
+  </div>
+  <div class="p-6 space-y-4 fade-up">
+    <div class="grid grid-cols-3 gap-4">
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#F5F3FF;"><ph-megaphone-simple weight="duotone" size="22" color="#7C3AED"></ph-megaphone-simple></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">7</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Lowongan Aktif</p></div></div>
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#EFF6FF;"><ph-users weight="duotone" size="22" color="#2563EB"></ph-users></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">142</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Total Kandidat</p></div></div>
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#ECFDF5;"><ph-calendar-check weight="duotone" size="22" color="#059669"></ph-calendar-check></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">18</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Interview Minggu Ini</p></div></div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">POSISI</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">ENTITAS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TIPE</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">DEADLINE</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KANDIDAT</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="l in lowongan" :key="l.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3"><p style="font-size:13px;font-weight:700;color:#0F172A;" x-text="l.posisi"></p><p style="font-size:11px;color:#94A3B8;" x-text="l.dept"></p></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="l.entitas"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="l.tipe==='PKWTT'?'background:#ECFDF5;color:#166534':'background:#FFF7ED;color:#C2410C'" x-text="l.tipe"></span></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="l.deadline"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full num" style="font-size:11px;font-weight:700;background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;" x-text="l.kandidat"></span></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="l.status==='Aktif'?'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0':'background:#FEF3C7;color:#92400E;border:1px solid #FDE68A'" x-text="l.status"></span></td>
+              <td class="px-4 py-3 text-center"><div class="flex items-center justify-center gap-1"><button @click="window.__spa.switchModule('rekrutmen-kandidat')" class="w-7 h-7 rounded-lg" style="color:#7C3AED;" @mouseenter="$el.style.background='#F5F3FF'" @mouseleave="$el.style.background=''"><ph-users weight="duotone" size="14"></ph-users></button><button class="w-7 h-7 rounded-lg" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><ph-pencil weight="duotone" size="14"></ph-pencil></button></div></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: REKRUTMEN — KANDIDAT & PIPELINE (KANBAN) ═══ -->
+<div x-show="currentModule==='rekrutmen-kandidat'" x-cloak x-data="mod_rekrutmen_kandidat()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Kandidat &amp; Pipeline</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Kandidat &amp; Pipeline</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Kandidat &amp; Pipeline</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Drag &amp; drop kandidat sesuai tahap rekrutmen</p>
+  </div>
+  <div class="p-6 fade-up">
+    <div class="grid grid-cols-5 gap-3">
+      <template x-for="col in cols" :key="col.id">
+        <div class="card p-3 kanban-col">
+          <div class="flex items-center justify-between mb-3">
+            <p style="font-size:12px;font-weight:700;color:#0F172A;" x-text="col.label"></p>
+            <span class="px-2 py-0.5 rounded-full num" style="font-size:10px;font-weight:700;" :style="`background:${col.bg};color:${col.color};`" x-text="col.cards.length"></span>
+          </div>
+          <div class="space-y-2">
+            <template x-for="c in col.cards" :key="c.id">
+              <div @click="openDetail(c)" class="kanban-card p-3 rounded-xl" style="background:#fff;border:1px solid #E2E8F0;">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white" style="font-size:9.5px;" :style="`background:${c.color}`" x-text="c.initials"></div>
+                  <p style="font-size:12px;font-weight:600;color:#0F172A;" x-text="c.name"></p>
+                </div>
+                <p style="font-size:11px;color:#64748B;margin-bottom:4px;" x-text="c.posisi"></p>
+                <div class="flex items-center justify-between">
+                  <p style="font-size:10.5px;color:#94A3B8;" x-text="c.sumber + ' · ' + c.tgl"></p>
+                  <div class="flex items-center gap-0.5">
+                    <template x-for="i in 5" :key="i">
+                      <ph-star weight="fill" size="10" :color="i<=c.rating?'#F59E0B':'#E2E8F0'"></ph-star>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+  <!-- Slide Panel Detail -->
+  <div x-show="selected" x-cloak class="fixed inset-0 z-[80]" @keydown.escape.window="selected=null">
+    <div class="absolute inset-0" style="background:rgba(15,23,42,.45);backdrop-filter:blur(2px);" @click="selected=null"></div>
+    <div class="absolute right-0 top-0 h-full bg-white shadow-2xl flex flex-col" style="width:440px;">
+      <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid #E2E8F0;">
+        <div class="flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white" style="font-size:13px;" :style="`background:${selected?.color}`" x-text="selected?.initials"></div><div><p style="font-size:14px;font-weight:700;color:#0F172A;" x-text="selected?.name"></p><p style="font-size:11.5px;color:#94A3B8;" x-text="selected?.posisi"></p></div></div>
+        <button @click="selected=null" class="w-8 h-8 rounded-lg flex items-center justify-center" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><ph-x weight="bold" size="16"></ph-x></button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;">Sumber</p><p style="font-size:13px;color:#0F172A;" x-text="selected?.sumber"></p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;">Tgl Apply</p><p style="font-size:13px;color:#0F172A;" x-text="selected?.tgl"></p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;">Email</p><p style="font-size:13px;color:#0F172A;" x-text="selected?.email||'kandidat@email.com'"></p></div>
+          <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;">No HP</p><p style="font-size:13px;color:#0F172A;">+62 812-3456-7890</p></div>
+          <div class="col-span-2"><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:4px;">Rating</p><div class="flex items-center gap-1"><template x-for="i in 5" :key="i"><ph-star weight="fill" size="18" :color="i<=(selected?.rating||0)?'#F59E0B':'#E2E8F0'"></ph-star></template></div></div>
+        </div>
+        <div><p style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:6px;">Catatan Interview</p><div class="card p-3" style="background:#F8FAFC;"><p style="font-size:12.5px;color:#374151;">Kandidat memiliki pengalaman 3 tahun di bidang yang sama. Skill teknis baik, perlu dilakukan assessment komunikasi.</p></div></div>
+      </div>
+      <div class="px-5 py-3 flex items-center justify-end gap-2" style="border-top:1px solid #E2E8F0;background:#F8FAFC;">
+        <button @click="selected=null" class="px-4 py-2 rounded-xl" style="background:#fff;color:#475569;font-size:12.5px;font-weight:600;border:1px solid #E2E8F0;">Tutup</button>
+        <button class="px-4 py-2 rounded-xl text-white" style="background:#7C3AED;font-size:12.5px;font-weight:600;">Pindahkan Tahap</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: REKRUTMEN — JADWAL INTERVIEW ═══ -->
+<div x-show="currentModule==='rekrutmen-jadwal'" x-cloak x-data="mod_rekrutmen_jadwal()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Jadwal Interview</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Jadwal Interview</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Jadwal Interview</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Jadwal interview hari ini &amp; besok</p>
+  </div>
+  <div class="p-6 space-y-5 fade-up">
+    <template x-for="hari in groups" :key="hari.label">
+      <div>
+        <p style="font-size:12.5px;font-weight:700;color:#0F172A;margin-bottom:8px;" x-text="hari.label"></p>
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto"><table class="w-full">
+            <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+              <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KANDIDAT</th>
+              <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">POSISI</th>
+              <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">JAM</th>
+              <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">INTERVIEWER</th>
+              <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">METODE</th>
+              <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="r in hari.rows" :key="r.id">
+                <tr style="border-bottom:1px solid #F8FAFC;">
+                  <td class="px-5 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${r.color}`" x-text="r.initials"></div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p></div></td>
+                  <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.posisi"></td>
+                  <td class="px-4 py-3 text-center num" style="font-size:12.5px;font-weight:700;color:#0F172A;" x-text="r.jam"></td>
+                  <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.interviewer"></td>
+                  <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="r.metode==='Online'?'background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE':'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A'" x-text="r.metode"></span></td>
+                  <td class="px-4 py-3 text-center"><div class="flex items-center justify-center gap-1"><button class="w-7 h-7 rounded-lg" style="color:#7C3AED;" @mouseenter="$el.style.background='#F5F3FF'" @mouseleave="$el.style.background=''" title="Mulai"><ph-video-camera weight="duotone" size="14"></ph-video-camera></button><button class="w-7 h-7 rounded-lg" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''" title="Jadwal Ulang"><ph-calendar weight="duotone" size="14"></ph-calendar></button></div></td>
+                </tr>
+              </template>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: KEHADIRAN — LEMBUR ═══ -->
+<div x-show="currentModule==='kehadiran-lembur'" x-cloak x-data="mod_kehadiran_lembur()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Lembur</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Lembur</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Pengajuan Lembur</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Persetujuan &amp; rekap jam lembur karyawan</p>
+  </div>
+
+  <div x-show="rejectModal" x-cloak class="modal-overlay" @click.self="rejectModal=false">
+    <div class="modal-box p-6" style="max-width:400px;">
+      <h3 style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:8px;">Tolak Pengajuan Lembur?</h3>
+      <p style="font-size:12.5px;color:#64748B;margin-bottom:16px;">Berikan alasan penolakan kepada karyawan.</p>
+      <textarea x-model="rejectReason" rows="3" placeholder="Alasan penolakan…" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"></textarea>
+      <div class="flex justify-end gap-2 mt-4"><button @click="rejectModal=false" class="px-4 py-2 rounded-xl" style="background:#F1F5F9;color:#475569;font-size:12.5px;font-weight:600;">Batal</button><button @click="confirmReject()" class="px-4 py-2 rounded-xl text-white" style="background:#DC2626;font-size:12.5px;font-weight:600;">Tolak</button></div>
+    </div>
+  </div>
+
+  <div class="p-6 space-y-4 fade-up">
+    <div class="grid grid-cols-3 gap-4">
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#FFFBEB;"><ph-clock-countdown weight="duotone" size="22" color="#D97706"></ph-clock-countdown></div><div><p class="num" style="font-size:24px;font-weight:800;color:#D97706;line-height:1;" x-text="pendingCount"></p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Pending Approval</p></div></div>
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#EFF6FF;"><ph-clock weight="duotone" size="22" color="#2563EB"></ph-clock></div><div><p class="num" style="font-size:24px;font-weight:800;color:#0F172A;line-height:1;">364j</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Total Jam Bulan Ini</p></div></div>
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#F5F3FF;"><ph-money weight="duotone" size="22" color="#7C3AED"></ph-money></div><div><p class="num" style="font-size:22px;font-weight:800;color:#0F172A;line-height:1;">Rp 18,3 jt</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Estimasi Biaya</p></div></div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TGL</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">JAM</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TOTAL JAM</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">ALASAN</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">EST. UPAH</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="r in rows" :key="r.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${r.color}`" x-text="r.initials"></div><div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p><p style="font-size:11px;color:#94A3B8;" x-text="r.dept"></p></div></div></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.tgl"></td>
+              <td class="px-4 py-3 num" style="font-size:12px;color:#475569;" x-text="r.mulai + ' – ' + r.selesai"></td>
+              <td class="px-4 py-3 text-center num" style="font-size:13px;font-weight:700;color:#0F172A;" x-text="r.total + 'j'"></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.alasan"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12px;font-weight:600;color:#7C3AED;" x-text="r.upah"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="r.status==='Pending'?'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A':r.status==='Disetujui'?'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0':'background:#FEF2F2;color:#991B1B;border:1px solid #FECACA'" x-text="r.status"></span></td>
+              <td class="px-4 py-3 text-center"><div x-show="r.status==='Pending'" class="flex items-center justify-center gap-1"><button @click="approve(r)" class="w-7 h-7 rounded-lg flex items-center justify-center" style="color:#059669;background:#ECFDF5;"><ph-check weight="bold" size="13"></ph-check></button><button @click="askReject(r)" class="w-7 h-7 rounded-lg flex items-center justify-center" style="color:#DC2626;background:#FEF2F2;"><ph-x weight="bold" size="13"></ph-x></button></div></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: KOMPONEN GAJI ═══ -->
+<div x-show="currentModule==='payroll-komponen'" x-cloak x-data="mod_payroll_komponen()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Komponen Gaji</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Komponen Gaji</span></nav>
+    <div class="flex items-center justify-between">
+      <div><h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Komponen Gaji</h1><p style="font-size:12px;color:#64748B;margin-top:2px;">Master pendapatan &amp; potongan untuk perhitungan payroll</p></div>
+      <button @click="openForm()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white" style="background:#7C3AED;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(124,58,237,.3);"><ph-plus weight="bold" size="13"></ph-plus>Tambah Komponen</button>
+    </div>
+  </div>
+
+  <div x-show="formOpen" x-cloak class="modal-overlay" @click.self="formOpen=false">
+    <div class="modal-box p-6" style="max-width:480px;">
+      <h3 style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:14px;">Tambah Komponen Baru</h3>
+      <div class="space-y-3">
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Nama Komponen</label><input x-model="form.nama" type="text" placeholder="e.g. Tunjangan Komunikasi" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <div class="grid grid-cols-2 gap-3"><div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Kategori</label><select x-model="form.kategori" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>Pendapatan</option><option>Potongan</option></select></div><div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tipe</label><select x-model="form.tipe" class="w-full px-3 py-2.5 rounded-xl border outline-none pr-8" style="font-size:13px;border-color:#E2E8F0;color:#374151;background:#fff;"><option>Tetap</option><option>Variabel</option><option>Persentase</option></select></div></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Nilai Default</label><input x-model="form.nilai" type="text" placeholder="Rp 0 / 0%" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" x-model="form.kenaPajak" style="accent-color:#7C3AED;" class="w-4 h-4 rounded"/><span style="font-size:12.5px;color:#374151;">Kena Pajak (PPh21)</span></label>
+      </div>
+      <div class="flex justify-end gap-2 mt-5"><button @click="formOpen=false" class="px-4 py-2 rounded-xl" style="background:#F1F5F9;color:#475569;font-size:12.5px;font-weight:600;">Batal</button><button @click="save()" class="px-4 py-2 rounded-xl text-white" style="background:#7C3AED;font-size:12.5px;font-weight:600;">Simpan</button></div>
+    </div>
+  </div>
+
+  <div class="p-6 fade-up">
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">NAMA KOMPONEN</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KATEGORI</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TIPE</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">NILAI DEFAULT</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KENA PAJAK</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="k in komponen" :key="k.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3" style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="k.nama"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="k.kategori==='Pendapatan'?'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0':'background:#FEF2F2;color:#991B1B;border:1px solid #FECACA'" x-text="k.kategori"></span></td>
+              <td class="px-4 py-3 text-center" style="font-size:11.5px;color:#64748B;" x-text="k.tipe"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12px;font-weight:600;color:#374151;" x-text="k.nilai"></td>
+              <td class="px-4 py-3 text-center"><span x-show="k.kenaPajak" class="text-emerald-600">✓</span><span x-show="!k.kenaPajak" style="color:#CBD5E1;">—</span></td>
+              <td class="px-4 py-3 text-center">
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="checkbox" x-model="k.aktif" class="sr-only peer"/>
+                  <div class="relative w-9 h-5 rounded-full transition" :style="k.aktif?'background:#7C3AED':'background:#CBD5E1'"><div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all" :style="k.aktif?'left:18px':'left:2px'"></div></div>
+                </label>
+              </td>
+              <td class="px-4 py-3 text-center"><button class="w-7 h-7 rounded-lg" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''"><ph-pencil weight="duotone" size="14"></ph-pencil></button></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: SIMULASI PPh 21 ═══ -->
+<div x-show="currentModule==='payroll-simulasi'" x-cloak x-data="mod_payroll_simulasi()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Simulasi PPh 21</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Simulasi PPh 21</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Simulasi PPh 21</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Kalkulator step-by-step pajak penghasilan karyawan</p>
+  </div>
+  <div class="p-6 grid grid-cols-2 gap-5 fade-up">
+    <!-- Form -->
+    <div class="card p-5">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:16px;" class="flex items-center gap-2"><ph-calculator weight="duotone" size="18" color="#7C3AED"></ph-calculator>Input Simulasi</h3>
+      <div class="space-y-4">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Status PTKP</label>
+          <div class="grid grid-cols-3 gap-2">
+            <template x-for="p in ptkpList" :key="p.code">
+              <label class="cursor-pointer" :style="form.ptkp===p.code?'background:#F5F3FF;border:2px solid #7C3AED':'background:#fff;border:1px solid #E2E8F0'" style="padding:10px 12px;border-radius:10px;display:flex;flex-direction:column;align-items:center;">
+                <input type="radio" name="ptkp" :value="p.code" x-model="form.ptkp" class="sr-only"/>
+                <span style="font-size:13px;font-weight:700;color:#0F172A;" x-text="p.code"></span>
+                <span class="num" style="font-size:10.5px;color:#64748B;" x-text="'Rp ' + p.amount.toLocaleString('id-ID')"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Gaji Pokok / Bulan (Rp)</label><input x-model.number="form.gapok" type="number" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;font-family:monospace;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tunjangan Tetap (Rp)</label><input x-model.number="form.tunjangan" type="number" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;font-family:monospace;" @focus="$el.style.borderColor='#A78BFA'" @blur="$el.style.borderColor='#E2E8F0'"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Metode</label>
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="metode" value="Gross" x-model="form.metode" style="accent-color:#7C3AED;"/><span style="font-size:12.5px;color:#374151;">Gross</span></label>
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="metode" value="Gross-Up" x-model="form.metode" style="accent-color:#7C3AED;"/><span style="font-size:12.5px;color:#374151;">Gross-Up</span></label>
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="metode" value="Net" x-model="form.metode" style="accent-color:#7C3AED;"/><span style="font-size:12.5px;color:#374151;">Net</span></label>
+          </div>
+        </div>
+        <button @click="hitung()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);"><ph-calculator weight="bold" size="15" color="white"></ph-calculator>Hitung PPh 21</button>
+      </div>
+    </div>
+    <!-- Result -->
+    <div class="card p-5" x-show="result" x-cloak>
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:16px;" class="flex items-center gap-2"><ph-receipt weight="duotone" size="18" color="#059669"></ph-receipt>Hasil Perhitungan</h3>
+      <table class="w-full">
+        <tbody>
+          <template x-for="(s,i) in resultSteps" :key="i">
+            <tr class="slip-row" :style="s.bold?'background:linear-gradient(90deg,#F5F3FF,#fff)':''">
+              <td class="px-3 py-2.5" :style="`font-size:12.5px;font-weight:${s.bold?700:500};color:${s.bold?'#5B21B6':'#475569'}`" x-text="s.label"></td>
+              <td class="text-right px-3 py-2.5 num" :style="`font-size:12.5px;font-weight:${s.bold?800:600};color:${s.bold?'#7C3AED':'#0F172A'}`" x-text="s.value"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+    <div class="card p-8 flex flex-col items-center justify-center text-center" x-show="!result"><ph-calculator weight="duotone" size="42" color="#CBD5E1"></ph-calculator><p style="font-size:13px;color:#94A3B8;margin-top:10px;">Isi form di kiri lalu klik <strong style="color:#7C3AED;">Hitung PPh 21</strong></p></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: SLIP & LAPORAN ═══ -->
+<div x-show="currentModule==='payroll-slip'" x-cloak x-data="mod_payroll_slip()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Slip &amp; Laporan Gaji</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Slip &amp; Laporan</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Slip &amp; Laporan Gaji</h1>
+    <div class="flex items-center gap-1 mt-3 -mb-2" style="border-bottom:1px solid #F1F5F9;">
+      <button @click="tab='slip'" class="tab-btn px-4 py-2.5" style="font-size:12.5px;color:#64748B;font-weight:500;" :class="tab==='slip'?'tab-active':''">Slip Gaji</button>
+      <button @click="tab='rekap'" class="tab-btn px-4 py-2.5" style="font-size:12.5px;color:#64748B;font-weight:500;" :class="tab==='rekap'?'tab-active':''">Rekap Payroll</button>
+    </div>
+  </div>
+
+  <!-- Modal preview slip -->
+  <div x-show="preview" x-cloak class="modal-overlay" @click.self="preview=null">
+    <div class="modal-box p-0" style="max-width:480px;">
+      <div class="px-6 py-4" style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);border-bottom:1px solid #DDD6FE;">
+        <p style="font-size:11px;color:#7C3AED;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">PT Surya Multi Sejahtera</p>
+        <p style="font-size:16px;font-weight:800;color:#0F172A;">Slip Gaji — <span x-text="preview?.periode"></span></p>
+        <p style="font-size:12px;color:#64748B;margin-top:2px;" x-text="preview?.name + ' · NIK ' + (preview?.nik||'SMS-XXX')"></p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <p style="font-size:11.5px;font-weight:700;color:#65A30D;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Penghasilan</p>
+          <table class="w-full"><tbody>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">Gaji Pokok</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 12.500.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">Tunjangan Jabatan</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 2.500.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">Tunjangan Transport</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 1.500.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">Lembur</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 500.000</td></tr>
+            <tr style="border-top:1px dashed #E2E8F0;"><td class="py-2 px-2" style="font-size:12.5px;font-weight:700;color:#0F172A;">Total Bruto</td><td class="text-right py-2 px-2 num" style="font-size:13px;font-weight:800;color:#16A34A;">Rp 17.000.000</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <p style="font-size:11.5px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Potongan</p>
+          <table class="w-full"><tbody>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">PPh 21</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 510.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">BPJS Kesehatan (1%)</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 170.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">BPJS TK JHT (2%)</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 340.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">BPJS TK JP (1%)</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 170.000</td></tr>
+            <tr class="slip-row"><td class="py-1.5 px-2" style="font-size:12.5px;color:#374151;">Tapera (0,5%)</td><td class="text-right py-1.5 px-2 num" style="font-size:12.5px;font-weight:600;color:#374151;">Rp 85.000</td></tr>
+            <tr style="border-top:1px dashed #E2E8F0;"><td class="py-2 px-2" style="font-size:12.5px;font-weight:700;color:#0F172A;">Total Potongan</td><td class="text-right py-2 px-2 num" style="font-size:13px;font-weight:800;color:#DC2626;">Rp 1.275.000</td></tr>
+          </tbody></table>
+        </div>
+        <div class="p-4 rounded-xl flex items-center justify-between" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);">
+          <p style="font-size:12px;color:#DDD6FE;font-weight:600;">TAKE HOME PAY</p>
+          <p class="num" style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;">Rp 15.725.000</p>
+        </div>
+      </div>
+      <div class="px-6 py-3 flex justify-end gap-2" style="background:#F8FAFC;border-top:1px solid #E2E8F0;">
+        <button @click="preview=null" class="px-4 py-2 rounded-xl" style="background:#fff;color:#475569;font-size:12.5px;font-weight:600;border:1px solid #E2E8F0;">Tutup</button>
+        <button class="px-4 py-2 rounded-xl text-white flex items-center gap-1.5" style="background:#7C3AED;font-size:12.5px;font-weight:600;"><ph-download-simple weight="bold" size="13"></ph-download-simple>Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 fade-up">
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">PERIODE</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">BRUTO</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">POTONGAN</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">NET</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="r in slips" :key="r.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${r.color}`" x-text="r.initials"></div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p></div></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.periode"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12px;color:#374151;" x-text="r.bruto"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12px;color:#DC2626;" x-text="r.potongan"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12.5px;font-weight:700;color:#7C3AED;" x-text="r.net"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="r.status==='Ditransfer'?'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0':'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A'" x-text="r.status"></span></td>
+              <td class="px-4 py-3 text-center"><div class="flex items-center justify-center gap-1"><button @click="preview=r" class="w-7 h-7 rounded-lg" style="color:#7C3AED;background:#F5F3FF;" title="Lihat Slip"><ph-eye weight="duotone" size="14"></ph-eye></button><button class="w-7 h-7 rounded-lg" style="color:#64748B;" @mouseenter="$el.style.background='#F1F5F9'" @mouseleave="$el.style.background=''" title="Download"><ph-download-simple weight="duotone" size="14"></ph-download-simple></button></div></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: REIMBURSEMENT ═══ -->
+<div x-show="currentModule==='keuangan-reimburse'" x-cloak x-data="mod_keuangan_reimburse()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Reimbursement</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Reimbursement</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Reimbursement</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Penggantian biaya pengeluaran karyawan</p>
+  </div>
+  <div class="p-6 space-y-4 fade-up">
+    <div class="grid grid-cols-3 gap-4">
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#FFFBEB;"><ph-clock-countdown weight="duotone" size="22" color="#D97706"></ph-clock-countdown></div><div><p class="num" style="font-size:24px;font-weight:800;color:#D97706;line-height:1;">8</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Pending</p></div></div>
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#ECFDF5;"><ph-check-circle weight="duotone" size="22" color="#059669"></ph-check-circle></div><div><p class="num" style="font-size:22px;font-weight:800;color:#0F172A;line-height:1;">Rp 18,4 jt</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Disetujui Bulan Ini</p></div></div>
+      <div class="card card-hover p-4 flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:#FEF2F2;"><ph-x-circle weight="duotone" size="22" color="#DC2626"></ph-x-circle></div><div><p class="num" style="font-size:24px;font-weight:800;color:#DC2626;line-height:1;">3</p><p style="font-size:11.5px;color:#64748B;margin-top:2px;">Ditolak</p></div></div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KATEGORI</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TGL</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">NOMINAL</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KETERANGAN</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="r in rows" :key="r.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${r.color}`" x-text="r.initials"></div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p></div></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="r.kategori==='Kesehatan'?'background:#FEF2F2;color:#991B1B':r.kategori==='Transport'?'background:#EFF6FF;color:#1D4ED8':r.kategori==='Makan'?'background:#FFFBEB;color:#92400E':'background:#F1F5F9;color:#475569'" x-text="r.kategori"></span></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;" x-text="r.tgl"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12.5px;font-weight:700;color:#0F172A;" x-text="r.nominal"></td>
+              <td class="px-4 py-3" style="font-size:12px;color:#475569;max-width:240px;" x-text="r.ket"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;" :style="r.status==='Pending'?'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A':r.status==='Disetujui'?'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0':'background:#FEF2F2;color:#991B1B;border:1px solid #FECACA'" x-text="r.status"></span></td>
+              <td class="px-4 py-3 text-center"><div x-show="r.status==='Pending'" class="flex items-center justify-center gap-1"><button @click="r.status='Disetujui'" class="w-7 h-7 rounded-lg" style="color:#059669;background:#ECFDF5;"><ph-check weight="bold" size="13"></ph-check></button><button @click="r.status='Ditolak'" class="w-7 h-7 rounded-lg" style="color:#DC2626;background:#FEF2F2;"><ph-x weight="bold" size="13"></ph-x></button></div></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: PERENCANAAN TENAGA KERJA ═══ -->
+<div x-show="currentModule==='sdm-manpower'" x-cloak x-data="mod_sdm_manpower()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Perencanaan Tenaga Kerja</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Manpower Planning</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Perencanaan Tenaga Kerja</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Gap aktual vs target headcount per departemen</p>
+  </div>
+  <div class="p-6 fade-up">
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">DEPARTEMEN</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKTUAL</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TARGET</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">GAP</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">STATUS</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="d in dept" :key="d.nama">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3" style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="d.nama"></td>
+              <td class="px-4 py-3 text-center num" style="font-size:13px;color:#0F172A;font-weight:600;" x-text="d.aktual"></td>
+              <td class="px-4 py-3 text-center num" style="font-size:13px;color:#475569;" x-text="d.target"></td>
+              <td class="px-4 py-3 text-center num" style="font-size:13px;font-weight:700;" :style="d.gap<0?'color:#DC2626':d.gap>0?'color:#059669':'color:#64748B'" x-text="d.gap>0?'+'+d.gap:d.gap"></td>
+              <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:700;" :style="d.gap<0?'background:#FEF2F2;color:#991B1B;border:1px solid #FECACA':d.gap>0?'background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE':'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0'" x-text="d.gap<0?'Kurang '+Math.abs(d.gap):d.gap>0?'Lebih +'+d.gap:'Cukup'"></span></td>
+              <td class="px-4 py-3 text-center"><button x-show="d.gap<0" @click="window.__spa.switchModule('rekrutmen-lowongan')" class="flex items-center gap-1 px-3 py-1.5 rounded-lg" style="background:#F5F3FF;color:#7C3AED;font-size:11.5px;font-weight:600;"><ph-plus weight="bold" size="11"></ph-plus>Buat Permintaan Rekrut</button></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: LAPORAN PAYROLL ═══ -->
+<div x-show="currentModule==='laporan-payroll'" x-cloak x-data="mod_laporan_payroll()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Laporan Payroll</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Laporan Payroll</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Laporan Payroll</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Rekap penggajian per periode &amp; entitas</p>
+  </div>
+  <div class="p-6 space-y-4 fade-up">
+    <!-- Filter -->
+    <div class="card p-4 flex flex-wrap items-center gap-3">
+      <select x-model="filterPeriode" class="px-3 py-2 rounded-xl pr-8" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;min-width:160px;"><option>April 2026</option><option>Maret 2026</option><option>Februari 2026</option><option>Q1 2026</option></select>
+      <select x-model="filterEntitas" class="px-3 py-2 rounded-xl pr-8" style="font-size:12.5px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;min-width:200px;"><option>Semua Entitas</option><option>PT Surya Multi Sejahtera</option><option>PT Surya Properti Nusantara</option><option>CV Surya Logistik</option></select>
+      <button @click="generated=true" class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:12.5px;font-weight:600;box-shadow:0 3px 10px rgba(124,58,237,.35);"><ph-magic-wand weight="bold" size="13"></ph-magic-wand>Generate</button>
+      <div class="flex-1"></div>
+      <button x-show="generated" class="flex items-center gap-1.5 px-3 py-2 rounded-xl" style="background:#ECFDF5;color:#065F46;font-size:12px;font-weight:600;"><ph-microsoft-excel-logo weight="duotone" size="13" color="#059669"></ph-microsoft-excel-logo>Export Excel</button>
+      <button x-show="generated" class="flex items-center gap-1.5 px-3 py-2 rounded-xl" style="background:#FEF2F2;color:#991B1B;font-size:12px;font-weight:600;"><ph-file-pdf weight="duotone" size="13" color="#DC2626"></ph-file-pdf>Export PDF</button>
+    </div>
+    <div x-show="generated" x-cloak class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">KARYAWAN</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">BRUTO</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">TOTAL POTONGAN</th>
+          <th class="text-right px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">NET</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="r in rows" :key="r.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="font-size:10px;" :style="`background:${r.color}`" x-text="r.initials"></div><p style="font-size:12.5px;font-weight:600;color:#0F172A;" x-text="r.name"></p></div></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12px;color:#374151;" x-text="r.bruto"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12px;color:#DC2626;" x-text="r.potongan"></td>
+              <td class="px-4 py-3 text-right num" style="font-size:12.5px;font-weight:700;color:#7C3AED;" x-text="r.net"></td>
+            </tr>
+          </template>
+        </tbody>
+        <tfoot><tr style="background:linear-gradient(90deg,#F5F3FF,#fff);border-top:2px solid #DDD6FE;">
+          <td class="px-5 py-3" style="font-size:13px;font-weight:800;color:#5B21B6;">TOTAL</td>
+          <td class="px-4 py-3 text-right num" style="font-size:13px;font-weight:800;color:#16A34A;">Rp 187.500.000</td>
+          <td class="px-4 py-3 text-right num" style="font-size:13px;font-weight:800;color:#DC2626;">Rp 18.250.000</td>
+          <td class="px-4 py-3 text-right num" style="font-size:14px;font-weight:800;color:#7C3AED;">Rp 169.250.000</td>
+        </tr></tfoot>
+      </table></div>
+    </div>
+    <div x-show="!generated" class="card p-10 flex flex-col items-center justify-center text-center"><ph-file-text weight="duotone" size="48" color="#CBD5E1"></ph-file-text><p style="font-size:13px;color:#94A3B8;margin-top:10px;">Pilih periode &amp; entitas, lalu klik <strong style="color:#7C3AED;">Generate</strong> untuk membuat laporan.</p></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: SETTING ABSENSI ═══ -->
+<div x-show="currentModule==='setting-absensi'" x-cloak x-data="mod_setting_absensi()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Konfigurasi Absensi</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span>Pengaturan</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Konfigurasi Absensi</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Konfigurasi Absensi</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Pengaturan jam kerja, toleransi, &amp; metode absensi</p>
+  </div>
+  <div x-show="toast" x-cloak class="fixed top-20 right-6 z-[90] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg" style="background:#059669;color:#fff;font-size:12.5px;"><ph-check-circle weight="duotone" size="16" color="#A7F3D0"></ph-check-circle><span>Konfigurasi berhasil disimpan</span></div>
+  <div class="p-6 grid grid-cols-2 gap-5 fade-up">
+    <div class="card p-5">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:16px;" class="flex items-center gap-2"><ph-clock weight="duotone" size="18" color="#7C3AED"></ph-clock>Jam Kerja</h3>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Jam Masuk</label><input x-model="form.jamMasuk" type="time" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+          <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Jam Pulang</label><input x-model="form.jamPulang" type="time" class="w-full px-3 py-2.5 rounded-xl border outline-none" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Toleransi Keterlambatan (menit)</label><input x-model.number="form.toleransi" type="number" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+      </div>
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin:24px 0 12px;" class="flex items-center gap-2"><ph-fingerprint-simple weight="duotone" size="18" color="#7C3AED"></ph-fingerprint-simple>Metode Absensi</h3>
+      <div class="space-y-2">
+        <label class="flex items-center gap-2.5 cursor-pointer p-2 rounded-lg" :style="form.method.fingerprint?'background:#F5F3FF':''" @mouseenter="$el.style.background='#F8FAFC'" @mouseleave="$el.style.background=form.method.fingerprint?'#F5F3FF':''"><input type="checkbox" x-model="form.method.fingerprint" class="w-4 h-4 rounded" style="accent-color:#7C3AED;"/><ph-fingerprint weight="duotone" size="16" color="#7C3AED"></ph-fingerprint><span style="font-size:12.5px;color:#374151;">Fingerprint</span></label>
+        <label class="flex items-center gap-2.5 cursor-pointer p-2 rounded-lg" :style="form.method.face?'background:#F5F3FF':''"><input type="checkbox" x-model="form.method.face" class="w-4 h-4 rounded" style="accent-color:#7C3AED;"/><ph-user-circle-check weight="duotone" size="16" color="#7C3AED"></ph-user-circle-check><span style="font-size:12.5px;color:#374151;">Face Recognition</span></label>
+        <label class="flex items-center gap-2.5 cursor-pointer p-2 rounded-lg" :style="form.method.manual?'background:#F5F3FF':''"><input type="checkbox" x-model="form.method.manual" class="w-4 h-4 rounded" style="accent-color:#7C3AED;"/><ph-pencil-line weight="duotone" size="16" color="#7C3AED"></ph-pencil-line><span style="font-size:12.5px;color:#374151;">Manual / Web</span></label>
+      </div>
+      <button @click="save()" class="w-full mt-5 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);"><ph-check weight="bold" size="15" color="white"></ph-check>Simpan</button>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3"><h3 style="font-size:14px;font-weight:700;color:#0F172A;" class="flex items-center gap-2"><ph-calendar-x weight="duotone" size="18" color="#DC2626"></ph-calendar-x>Hari Libur</h3><button @click="addHoliday()" class="flex items-center gap-1 px-3 py-1.5 rounded-lg" style="background:#F5F3FF;color:#7C3AED;font-size:11.5px;font-weight:600;"><ph-plus weight="bold" size="11"></ph-plus>Tambah</button></div>
+      <table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-3 py-2" style="font-size:10.5px;font-weight:700;color:#94A3B8;">TANGGAL</th>
+          <th class="text-left px-3 py-2" style="font-size:10.5px;font-weight:700;color:#94A3B8;">KETERANGAN</th>
+          <th class="text-center px-3 py-2" style="font-size:10.5px;font-weight:700;color:#94A3B8;"></th>
+        </tr></thead>
+        <tbody>
+          <template x-for="h in holidays" :key="h.id">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-3 py-2" style="font-size:12px;color:#475569;" x-text="h.tgl"></td>
+              <td class="px-3 py-2" style="font-size:12px;color:#374151;font-weight:500;" x-text="h.label"></td>
+              <td class="px-3 py-2 text-center"><button @click="holidays = holidays.filter(x=>x.id!==h.id)" class="w-7 h-7 rounded-lg" style="color:#DC2626;" @mouseenter="$el.style.background='#FEF2F2'" @mouseleave="$el.style.background=''"><ph-trash weight="duotone" size="13"></ph-trash></button></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: SETTING PAYROLL ═══ -->
+<div x-show="currentModule==='setting-payroll'" x-cloak x-data="mod_setting_payroll()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Konfigurasi Payroll</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span>Pengaturan</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Konfigurasi Payroll</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Konfigurasi Payroll</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Pengaturan periode, cut-off, &amp; metode PPh21</p>
+  </div>
+  <div x-show="toast" x-cloak class="fixed top-20 right-6 z-[90] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg" style="background:#059669;color:#fff;font-size:12.5px;"><ph-check-circle weight="duotone" size="16" color="#A7F3D0"></ph-check-circle><span>Konfigurasi berhasil disimpan</span></div>
+  <div class="p-6 fade-up">
+    <div class="card p-6 max-w-3xl">
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:16px;" class="flex items-center gap-2"><ph-calendar-blank weight="duotone" size="18" color="#7C3AED"></ph-calendar-blank>Periode &amp; Cut-off</h3>
+      <div class="grid grid-cols-3 gap-4 mb-5">
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tgl Cut-off Absensi</label><input x-model.number="form.cutoff" type="number" min="1" max="31" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tgl Proses Payroll</label><input x-model.number="form.proses" type="number" min="1" max="31" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Tgl Transfer Gaji</label><input x-model.number="form.transfer" type="number" min="1" max="31" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;"/></div>
+      </div>
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:12px;" class="flex items-center gap-2"><ph-receipt weight="duotone" size="18" color="#7C3AED"></ph-receipt>Metode PPh 21</h3>
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <template x-for="m in ['Gross','Gross-Up','Net']" :key="m">
+          <label class="cursor-pointer" :style="form.metodePph===m?'background:#F5F3FF;border:2px solid #7C3AED':'background:#fff;border:1px solid #E2E8F0'" style="padding:14px;border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+            <input type="radio" name="pph" :value="m" x-model="form.metodePph" class="sr-only"/>
+            <span style="font-size:13px;font-weight:700;color:#0F172A;" x-text="m"></span>
+            <span style="font-size:10.5px;color:#64748B;margin-top:4px;" x-text="m==='Gross'?'Pajak dipotong dari karyawan':m==='Gross-Up'?'Pajak dibayar perusahaan':'Take Home Pay tetap'"></span>
+          </label>
+        </template>
+      </div>
+      <h3 style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:12px;" class="flex items-center gap-2"><ph-list-checks weight="duotone" size="18" color="#7C3AED"></ph-list-checks>Aturan Lainnya</h3>
+      <div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Minimal Hari Kerja per Bulan</label><input x-model.number="form.minHari" type="number" class="w-full px-3 py-2.5 rounded-xl border outline-none num" style="font-size:13px;border-color:#E2E8F0;color:#374151;max-width:160px;"/></div>
+      <button @click="save()" class="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-semibold" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);font-size:13px;box-shadow:0 4px 12px rgba(124,58,237,.35);"><ph-check weight="bold" size="15" color="white"></ph-check>Simpan Konfigurasi</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODULE: SETTING APPROVAL ═══ -->
+<div x-show="currentModule==='setting-approval'" x-cloak x-data="mod_setting_approval()">
+<header class="fixed top-0 right-0 h-14 bg-white z-30 flex items-center px-5 gap-4" style="left:260px;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04);"><p style="font-size:13.5px;font-weight:700;color:#0F172A;">Alur Persetujuan</p><div class="flex-1"></div></header>
+<div class="ml-[260px] pt-14 min-h-screen" style="background:#F8FAFC;">
+  <div class="bg-white px-6 py-4" style="border-bottom:1px solid #E2E8F0;">
+    <nav class="flex items-center gap-1.5 mb-1" style="font-size:11px;color:#94A3B8;"><span>HR &amp; Payroll</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span>Pengaturan</span><svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/></svg><span style="color:#7C3AED;font-weight:600;">Alur Persetujuan</span></nav>
+    <h1 style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-.4px;">Alur Persetujuan</h1>
+    <p style="font-size:12px;color:#64748B;margin-top:2px;">Konfigurasi level approval per jenis pengajuan</p>
+  </div>
+  <div class="p-6 fade-up">
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="w-full">
+        <thead><tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <th class="text-left px-5 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">JENIS PENGAJUAN</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">LEVEL 1</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">LEVEL 2</th>
+          <th class="text-left px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">LEVEL 3</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">BATAS WAKTU</th>
+          <th class="text-center px-4 py-3" style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.05em;">AKSI</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="r in flow" :key="r.jenis">
+            <tr style="border-bottom:1px solid #F8FAFC;">
+              <td class="px-5 py-3" style="font-size:12.5px;font-weight:700;color:#0F172A;" x-text="r.jenis"></td>
+              <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;" x-text="r.l1"></span></td>
+              <td class="px-4 py-3"><span x-show="r.l2" class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;" x-text="r.l2"></span><span x-show="!r.l2" style="color:#CBD5E1;font-size:13px;">—</span></td>
+              <td class="px-4 py-3"><span x-show="r.l3" class="px-2 py-0.5 rounded-full" style="font-size:10.5px;font-weight:600;background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;" x-text="r.l3"></span><span x-show="!r.l3" style="color:#CBD5E1;font-size:13px;">—</span></td>
+              <td class="px-4 py-3 text-center" style="font-size:12px;color:#475569;" x-text="r.batas"></td>
+              <td class="px-4 py-3 text-center"><button class="flex items-center gap-1 px-2.5 py-1 rounded-lg" style="background:#F1F5F9;color:#475569;font-size:11.5px;font-weight:600;" @mouseenter="$el.style.background='#E2E8F0'" @mouseleave="$el.style.background='#F1F5F9'"><ph-pencil weight="duotone" size="11"></ph-pencil>Edit</button></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
 function spa() {
   return {
     currentModule: 'dashboard',
     secondaryOpen: false,
     activeGroup: null,
+    subgroupOpen: {},
     hoverTip: {show:false, x:0, y:0, icon:'', label:'', badge:null},
 
     init() {
@@ -11229,11 +12477,33 @@ function spa() {
       const map = {};
       this.navConfig.forEach(item => {
         if (item.type === 'group' && item.items) {
-          item.items.forEach(sub => { map[sub.module] = item.key; });
+          item.items.forEach(sub => {
+            if (sub.type === 'subgroup' && sub.children) {
+              sub.children.forEach(c => { map[c.module] = item.key; });
+            } else if (sub.module) {
+              map[sub.module] = item.key;
+            }
+          });
         }
       });
       return map;
     },
+
+    get routeToSubgroup() {
+      const map = {};
+      this.navConfig.forEach(item => {
+        if (item.type === 'group' && item.items) {
+          item.items.forEach(sub => {
+            if (sub.type === 'subgroup' && sub.children) {
+              sub.children.forEach(c => { map[c.module] = sub.key; });
+            }
+          });
+        }
+      });
+      return map;
+    },
+
+    toggleSubgroup(key) { this.subgroupOpen[key] = !this.subgroupOpen[key]; },
 
     get activeGroupData() {
       if (!this.activeGroup) return null;
@@ -11278,6 +12548,7 @@ function spa() {
     },
 
     switchModule(mod) {
+      if (mod === 'rekrutmen') mod = 'rekrutmen-lowongan';
       this.currentModule = mod;
       this.$el.currentModule = mod;
       const parent = this.routeToParent[mod];
@@ -11288,6 +12559,8 @@ function spa() {
         this.secondaryOpen = false;
         this.activeGroup = null;
       }
+      const sub = this.routeToSubgroup[mod];
+      if (sub) this.subgroupOpen[sub] = true;
       Object.keys(this.sidebarOpen).forEach(k => {
         this.sidebarOpen[k] = (k === parent);
       });
@@ -11414,17 +12687,48 @@ function spa() {
         type:'group', key:'hr', label:'HR & Payroll',
         icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="7" r="3.5" fill="#C4B5FD" opacity=".4"/><circle cx="16" cy="7" r="2.5" fill="#C4B5FD" opacity=".25"/><path d="M2 20c0-3.314 2.686-6 6-6s6 2.686 6 6" fill="#C4B5FD" opacity=".4"/><path d="M16 12c2.21 0 4 1.79 4 4v1" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round"/></svg>`,
         items:[
-          {label:'Data Karyawan', module:'karyawan'},
-          {label:'Rekrutmen & Onboarding', module:'rekrutmen'},
-          {label:'Absensi & Kehadiran', module:'absensi'},
-          {label:'Shift & Jadwal', module:'shift'},
-          {label:'Cuti & Izin', module:'cuti'},
-          {label:'Payroll', module:'payroll'},
-          {label:'Pinjaman Karyawan', module:'pinjaman'},
-          {label:'Perjalanan Dinas', module:'perjalanan'},
-          {label:'Evaluasi Kinerja', module:'evaluasi'},
-          {label:'Pelatihan & SDM', module:'pelatihan'},
-          {label:'Analitik HR', module:'analitik'},
+          { type:'subgroup', key:'hr-karyawan', label:'Karyawan', children:[
+            {label:'Data Karyawan', module:'karyawan'},
+            {label:'Tambah Karyawan Baru', module:'karyawan-baru'},
+            {label:'Onboarding & Offboarding', module:'karyawan-onboard'},
+            {label:'Teguran & Disiplin', module:'karyawan-disiplin'},
+          ]},
+          { type:'subgroup', key:'hr-rekrutmen', label:'Rekrutmen', children:[
+            {label:'Lowongan Aktif', module:'rekrutmen-lowongan'},
+            {label:'Kandidat & Pipeline', module:'rekrutmen-kandidat'},
+            {label:'Jadwal Interview', module:'rekrutmen-jadwal'},
+          ]},
+          { type:'subgroup', key:'hr-kehadiran', label:'Kehadiran & Waktu', children:[
+            {label:'Absensi Harian', module:'absensi'},
+            {label:'Lembur', module:'kehadiran-lembur'},
+            {label:'Cuti & Izin', module:'cuti'},
+            {label:'Shift & Jadwal', module:'shift'},
+          ]},
+          { type:'subgroup', key:'hr-payroll', label:'Penggajian', children:[
+            {label:'Proses Payroll', module:'payroll'},
+            {label:'Komponen Gaji', module:'payroll-komponen'},
+            {label:'Simulasi PPh 21', module:'payroll-simulasi'},
+            {label:'Slip & Laporan', module:'payroll-slip'},
+          ]},
+          { type:'subgroup', key:'hr-keuangan', label:'Keuangan', children:[
+            {label:'Pinjaman', module:'pinjaman'},
+            {label:'Reimbursement', module:'keuangan-reimburse'},
+            {label:'Perjalanan Dinas', module:'perjalanan'},
+          ]},
+          { type:'subgroup', key:'hr-sdm', label:'Pengembangan SDM', children:[
+            {label:'Evaluasi Kinerja', module:'evaluasi'},
+            {label:'Pelatihan & Sertifikasi', module:'pelatihan'},
+            {label:'Perencanaan Tenaga Kerja', module:'sdm-manpower'},
+          ]},
+          { type:'subgroup', key:'hr-laporan', label:'Laporan & Analitik', children:[
+            {label:'Dashboard Analitik', module:'analitik'},
+            {label:'Laporan Payroll', module:'laporan-payroll'},
+          ]},
+          { type:'subgroup', key:'hr-setting', label:'Pengaturan HR', children:[
+            {label:'Konfigurasi Absensi', module:'setting-absensi'},
+            {label:'Konfigurasi Payroll', module:'setting-payroll'},
+            {label:'Alur Persetujuan', module:'setting-approval'},
+          ]},
         ],
       },
       {
@@ -11470,6 +12774,311 @@ function spa() {
 }
 
 
+
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ HR & PAYROLL — NEW MODULE FUNCTIONS ═══
+// ═══════════════════════════════════════════════════════════════
+
+function mod_karyawan_baru(){
+  return {
+    step:1,
+    toast:false,
+    steps:[
+      {id:1,label:'Data Pribadi',sub:'Identitas & kontak'},
+      {id:2,label:'Data Pekerjaan',sub:'Posisi & kontrak'},
+      {id:3,label:'Akun & Dokumen',sub:'NPWP, rekening, akun'},
+    ],
+    form:{nama:'',tempat:'',tgl:'',gender:'L',agama:'Islam',hp:'',email:'',entitas:'PT Surya Multi Sejahtera',dept:'Engineering',jabatan:'',kontrak:'PKWTT',mulai:'',berakhir:'',golongan:'I — Staff',gapok:'',npwp:'',bank:'BCA',rek:'',emailSistem:''},
+    save(){ this.toast=true; setTimeout(()=>{ this.toast=false; window.__spa.switchModule('karyawan'); }, 1200); },
+  };
+}
+
+function mod_karyawan_onboard(){
+  return {
+    tab:'onboard',
+    onboarding:[
+      {id:1,name:'Maya Sari',role:'Staff Administrasi',dept:'Admin',joinDate:'02 Apr 2026',daysLeft:7,initials:'MS',color:'#64748B',progress:80,checks:[
+        {label:'Dokumen Lengkap',done:true},{label:'Akun IT',done:true},{label:'Serah Terima Aset',done:true},{label:'Orientasi',done:true},{label:'Pengenalan Tim',done:false}
+      ]},
+      {id:2,name:'Ahmad Fauzi',role:'Backend Developer',dept:'IT',joinDate:'15 Apr 2026',daysLeft:21,initials:'AF',color:'#3B82F6',progress:40,checks:[
+        {label:'Dokumen Lengkap',done:true},{label:'Akun IT',done:true},{label:'Serah Terima Aset',done:false},{label:'Orientasi',done:false},{label:'Pengenalan Tim',done:false}
+      ]},
+      {id:3,name:'Nurul Hidayah',role:'Marketing Officer',dept:'Marketing',joinDate:'25 Apr 2026',daysLeft:30,initials:'NH',color:'#EC4899',progress:20,checks:[
+        {label:'Dokumen Lengkap',done:true},{label:'Akun IT',done:false},{label:'Serah Terima Aset',done:false},{label:'Orientasi',done:false},{label:'Pengenalan Tim',done:false}
+      ]},
+      {id:4,name:'Bayu Sentanu',role:'Engineer Junior',dept:'Engineering',joinDate:'10 Apr 2026',daysLeft:15,initials:'BS',color:'#0EA5E9',progress:100,checks:[
+        {label:'Dokumen Lengkap',done:true},{label:'Akun IT',done:true},{label:'Serah Terima Aset',done:true},{label:'Orientasi',done:true},{label:'Pengenalan Tim',done:true}
+      ]},
+    ],
+    offboarding:[
+      {id:1,name:'Toni Kusuma',role:'Mechanical Engineer',initials:'TK',color:'#94A3B8',exitDate:'30 Apr 2026',reason:'Resign',aset:true,clearance:true,exit:true,paklaring:false,akses:false},
+      {id:2,name:'Rini Lestari',role:'Marketing',initials:'RL',color:'#EC4899',exitDate:'15 Apr 2026',reason:'Habis Kontrak',aset:true,clearance:true,exit:true,paklaring:true,akses:true},
+      {id:3,name:'Doni Wijaya',role:'Operator',initials:'DW',color:'#D97706',exitDate:'20 Apr 2026',reason:'PHK',aset:false,clearance:false,exit:false,paklaring:false,akses:false},
+    ],
+    updateProg(o){ const total = o.checks.length; const done = o.checks.filter(c=>c.done).length; o.progress = Math.round(done/total*100); },
+  };
+}
+
+function mod_karyawan_disiplin(){
+  return {
+    tab:'daftar',
+    toast:false,
+    records:[
+      {id:1,tgl:'08 Apr 2026',name:'Andi Prasetyo',initials:'AP',color:'#F59E0B',jenis:'SP1',pelanggaran:'Keterlambatan berulang (5x dalam sebulan)',status:'Aktif'},
+      {id:2,tgl:'05 Apr 2026',name:'Reza Firmansyah',initials:'RF',color:'#D97706',jenis:'SP1',pelanggaran:'Mangkir 2 hari tanpa keterangan',status:'Aktif'},
+      {id:3,tgl:'01 Apr 2026',name:'Doni Wijaya',initials:'DW',color:'#D97706',jenis:'SP3',pelanggaran:'Pelanggaran SOP K3 berulang',status:'Aktif'},
+      {id:4,tgl:'18 Mar 2026',name:'Budi Santoso',initials:'BS',color:'#2563EB',jenis:'SP1',pelanggaran:'Tidak hadir rapat penting',status:'Selesai'},
+      {id:5,tgl:'10 Mar 2026',name:'Hendri Susanto',initials:'HS',color:'#EF4444',jenis:'SP2',pelanggaran:'Konflik dengan rekan kerja',status:'Aktif'},
+    ],
+    form:{emp:'Pilih karyawan…',jenis:'SP1',kategori:'Keterlambatan Berulang',desc:'',saksi:''},
+    save(){ this.toast=true; this.tab='daftar'; setTimeout(()=>{ this.toast=false; }, 2000); },
+  };
+}
+
+function mod_rekrutmen_lowongan(){
+  return {
+    lowongan:[
+      {id:1,posisi:'Senior Frontend Developer',dept:'IT',entitas:'PT Surya Multi Sejahtera',tipe:'PKWTT',deadline:'30 Apr 2026',kandidat:24,status:'Aktif'},
+      {id:2,posisi:'Project Manager',dept:'Engineering',entitas:'PT Surya Properti Nusantara',tipe:'PKWTT',deadline:'15 Mei 2026',kandidat:18,status:'Aktif'},
+      {id:3,posisi:'Site Engineer',dept:'Engineering',entitas:'PT Surya Multi Sejahtera',tipe:'PKWT',deadline:'25 Apr 2026',kandidat:32,status:'Aktif'},
+      {id:4,posisi:'HR Generalist',dept:'HR & GA',entitas:'PT Surya Multi Sejahtera',tipe:'PKWTT',deadline:'05 Mei 2026',kandidat:15,status:'Aktif'},
+      {id:5,posisi:'Akuntan',dept:'Finance',entitas:'CV Surya Logistik',tipe:'PKWTT',deadline:'20 Apr 2026',kandidat:21,status:'Aktif'},
+      {id:6,posisi:'Driver',dept:'Operasional',entitas:'CV Surya Logistik',tipe:'PKWT',deadline:'12 Apr 2026',kandidat:28,status:'Akan Tutup'},
+      {id:7,posisi:'Operator Produksi',dept:'Produksi',entitas:'HS Rokok',tipe:'PKWT',deadline:'30 Apr 2026',kandidat:4,status:'Aktif'},
+    ],
+  };
+}
+
+function mod_rekrutmen_kandidat(){
+  return {
+    selected:null,
+    openDetail(c){ this.selected = c; },
+    cols:[
+      {id:'baru',label:'Baru Masuk',bg:'#F1F5F9',color:'#475569',cards:[
+        {id:1,name:'Rina Pratiwi',initials:'RP',color:'#EC4899',posisi:'Frontend Developer',sumber:'LinkedIn',tgl:'5 Apr',rating:4},
+        {id:2,name:'Hari Setiawan',initials:'HS',color:'#10B981',posisi:'PM',sumber:'JobStreet',tgl:'4 Apr',rating:3},
+        {id:3,name:'Lia Anggraini',initials:'LA',color:'#7C3AED',posisi:'HR Generalist',sumber:'Referral',tgl:'4 Apr',rating:5},
+      ]},
+      {id:'screening',label:'Screening',bg:'#FEF3C7',color:'#92400E',cards:[
+        {id:4,name:'Galih Permadi',initials:'GP',color:'#F59E0B',posisi:'Site Engineer',sumber:'LinkedIn',tgl:'3 Apr',rating:4},
+        {id:5,name:'Devi Lestari',initials:'DL',color:'#0EA5E9',posisi:'Akuntan',sumber:'JobStreet',tgl:'2 Apr',rating:3},
+      ]},
+      {id:'interview',label:'Interview',bg:'#DBEAFE',color:'#1E40AF',cards:[
+        {id:6,name:'Bagus Hartono',initials:'BH',color:'#2563EB',posisi:'Frontend Developer',sumber:'Referral',tgl:'1 Apr',rating:5},
+        {id:7,name:'Tina Kusuma',initials:'TK',color:'#D946EF',posisi:'PM',sumber:'LinkedIn',tgl:'30 Mar',rating:4},
+      ]},
+      {id:'offering',label:'Offering',bg:'#EDE9FE',color:'#5B21B6',cards:[
+        {id:8,name:'Faisal Akbar',initials:'FA',color:'#7C3AED',posisi:'Site Engineer',sumber:'LinkedIn',tgl:'28 Mar',rating:5},
+      ]},
+      {id:'diterima',label:'Diterima',bg:'#D1FAE5',color:'#065F46',cards:[
+        {id:9,name:'Sinta Maharani',initials:'SM',color:'#059669',posisi:'HR Generalist',sumber:'Referral',tgl:'25 Mar',rating:5},
+      ]},
+    ],
+  };
+}
+
+function mod_rekrutmen_jadwal(){
+  return {
+    groups:[
+      {label:'Hari Ini — '+new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),rows:[
+        {id:1,name:'Bagus Hartono',initials:'BH',color:'#2563EB',posisi:'Frontend Developer',jam:'09:00',interviewer:'Sari W. (HR), Andi P. (IT)',metode:'Online'},
+        {id:2,name:'Tina Kusuma',initials:'TK',color:'#D946EF',posisi:'Project Manager',jam:'10:30',interviewer:'Hendra W. (Manager)',metode:'Onsite'},
+        {id:3,name:'Galih Permadi',initials:'GP',color:'#F59E0B',posisi:'Site Engineer',jam:'14:00',interviewer:'Budi S. (Senior)',metode:'Onsite'},
+      ]},
+      {label:'Besok',rows:[
+        {id:4,name:'Devi Lestari',initials:'DL',color:'#0EA5E9',posisi:'Akuntan',jam:'09:00',interviewer:'Linda P. (Finance)',metode:'Online'},
+        {id:5,name:'Lia Anggraini',initials:'LA',color:'#7C3AED',posisi:'HR Generalist',jam:'13:00',interviewer:'Siti R. (HR Mgr)',metode:'Onsite'},
+      ]},
+    ],
+  };
+}
+
+function mod_kehadiran_lembur(){
+  return {
+    rejectModal:false,
+    rejectReason:'',
+    pendingId:null,
+    rows:[
+      {id:1,name:'Andi Prasetyo',initials:'AP',color:'#F59E0B',dept:'IT',tgl:'08 Apr 2026',mulai:'18:00',selesai:'22:00',total:4,alasan:'Deploy production release',upah:'Rp 240.000',status:'Pending'},
+      {id:2,name:'Sari Wulandari',initials:'SW',color:'#0EA5E9',dept:'Finance',tgl:'07 Apr 2026',mulai:'18:00',selesai:'21:00',total:3,alasan:'Closing periode bulan',upah:'Rp 180.000',status:'Pending'},
+      {id:3,name:'Reza Firmansyah',initials:'RF',color:'#D97706',dept:'Produksi',tgl:'06 Apr 2026',mulai:'18:00',selesai:'00:00',total:6,alasan:'Penyelesaian target produksi',upah:'Rp 360.000',status:'Pending'},
+      {id:4,name:'Budi Santoso',initials:'BS',color:'#2563EB',dept:'Engineering',tgl:'05 Apr 2026',mulai:'18:00',selesai:'23:00',total:5,alasan:'Inspeksi proyek',upah:'Rp 300.000',status:'Disetujui'},
+      {id:5,name:'Faisal Hidayat',initials:'FH',color:'#10B981',dept:'Engineering',tgl:'04 Apr 2026',mulai:'18:00',selesai:'21:00',total:3,alasan:'Drawing revision',upah:'Rp 180.000',status:'Disetujui'},
+      {id:6,name:'Hendri Susanto',initials:'HS',color:'#EF4444',dept:'Legal',tgl:'03 Apr 2026',mulai:'18:00',selesai:'20:00',total:2,alasan:'Review kontrak',upah:'Rp 120.000',status:'Ditolak'},
+    ],
+    get pendingCount(){ return this.rows.filter(r=>r.status==='Pending').length; },
+    approve(r){ r.status = 'Disetujui'; },
+    askReject(r){ this.pendingId = r.id; this.rejectModal = true; },
+    confirmReject(){ const r = this.rows.find(x=>x.id===this.pendingId); if(r) r.status='Ditolak'; this.rejectModal=false; this.rejectReason=''; },
+  };
+}
+
+function mod_payroll_komponen(){
+  return {
+    formOpen:false,
+    form:{nama:'',kategori:'Pendapatan',tipe:'Tetap',nilai:'',kenaPajak:false},
+    openForm(){ this.form = {nama:'',kategori:'Pendapatan',tipe:'Tetap',nilai:'',kenaPajak:false}; this.formOpen = true; },
+    save(){ if(this.form.nama){ this.komponen.push({id:Date.now(),...this.form,aktif:true}); } this.formOpen = false; },
+    komponen:[
+      {id:1,nama:'Gaji Pokok',kategori:'Pendapatan',tipe:'Tetap',nilai:'Per Karyawan',kenaPajak:true,aktif:true},
+      {id:2,nama:'Tunjangan Jabatan',kategori:'Pendapatan',tipe:'Tetap',nilai:'Rp 2.500.000',kenaPajak:true,aktif:true},
+      {id:3,nama:'Tunjangan Transport',kategori:'Pendapatan',tipe:'Tetap',nilai:'Rp 1.500.000',kenaPajak:true,aktif:true},
+      {id:4,nama:'Tunjangan Makan',kategori:'Pendapatan',tipe:'Tetap',nilai:'Rp 1.200.000',kenaPajak:true,aktif:true},
+      {id:5,nama:'Upah Lembur',kategori:'Pendapatan',tipe:'Variabel',nilai:'Rp 60.000/jam',kenaPajak:true,aktif:true},
+      {id:6,nama:'Bonus Kinerja',kategori:'Pendapatan',tipe:'Variabel',nilai:'Per Penilaian',kenaPajak:true,aktif:false},
+      {id:7,nama:'PPh 21',kategori:'Potongan',tipe:'Persentase',nilai:'Progresif',kenaPajak:false,aktif:true},
+      {id:8,nama:'BPJS Kesehatan',kategori:'Potongan',tipe:'Persentase',nilai:'1%',kenaPajak:false,aktif:true},
+      {id:9,nama:'BPJS TK — JHT',kategori:'Potongan',tipe:'Persentase',nilai:'2%',kenaPajak:false,aktif:true},
+      {id:10,nama:'BPJS TK — JP',kategori:'Potongan',tipe:'Persentase',nilai:'1%',kenaPajak:false,aktif:true},
+      {id:11,nama:'Tapera',kategori:'Potongan',tipe:'Persentase',nilai:'0,5%',kenaPajak:false,aktif:true},
+      {id:12,nama:'Potongan Ketidakhadiran',kategori:'Potongan',tipe:'Variabel',nilai:'Pro-rata',kenaPajak:false,aktif:true},
+      {id:13,nama:'Cicilan Pinjaman',kategori:'Potongan',tipe:'Variabel',nilai:'Per Skema',kenaPajak:false,aktif:true},
+    ],
+  };
+}
+
+function mod_payroll_simulasi(){
+  return {
+    form:{ptkp:'TK/0',gapok:10000000,tunjangan:2000000,metode:'Gross'},
+    ptkpList:[
+      {code:'TK/0',amount:54000000},{code:'TK/1',amount:58500000},
+      {code:'K/0',amount:58500000},{code:'K/1',amount:63000000},
+      {code:'K/2',amount:67500000},{code:'K/3',amount:72000000},
+    ],
+    result:false,
+    resultSteps:[],
+    fmt(n){ return 'Rp '+Math.round(n).toLocaleString('id-ID'); },
+    hitung(){
+      const bruto = (Number(this.form.gapok)||0) + (Number(this.form.tunjangan)||0);
+      const setahun = bruto * 12;
+      const biayaJabatan = Math.min(setahun*0.05, 6000000);
+      const bpjs = setahun * 0.04;
+      const neto = setahun - biayaJabatan - bpjs;
+      const ptkp = this.ptkpList.find(p=>p.code===this.form.ptkp).amount;
+      const pkp = Math.max(0, neto - ptkp);
+      let pph=0;
+      const tarif=[[60000000,0.05],[250000000,0.15],[500000000,0.25],[5000000000,0.30],[Infinity,0.35]];
+      let sisa=pkp, prev=0;
+      for(const [batas,rate] of tarif){
+        if(sisa<=0) break;
+        const seg = Math.min(sisa, batas-prev);
+        pph += seg*rate;
+        sisa -= seg; prev = batas;
+        if(sisa<=0) break;
+      }
+      const pphBulan = pph/12;
+      this.resultSteps = [
+        {label:'Penghasilan Bruto / bulan', value:this.fmt(bruto)},
+        {label:'Penghasilan Bruto / tahun', value:this.fmt(setahun)},
+        {label:'Biaya Jabatan (5%, max Rp 6 jt)', value:'− '+this.fmt(biayaJabatan)},
+        {label:'BPJS Kesehatan & TK (4%)', value:'− '+this.fmt(bpjs)},
+        {label:'Penghasilan Neto / tahun', value:this.fmt(neto)},
+        {label:'PTKP ('+this.form.ptkp+')', value:'− '+this.fmt(ptkp)},
+        {label:'PKP (Penghasilan Kena Pajak)', value:this.fmt(pkp)},
+        {label:'PPh 21 / tahun', value:this.fmt(pph),bold:false},
+        {label:'PPh 21 / BULAN', value:this.fmt(pphBulan),bold:true},
+      ];
+      this.result = true;
+    },
+  };
+}
+
+function mod_payroll_slip(){
+  return {
+    tab:'slip',
+    preview:null,
+    slips:[
+      {id:1,name:'Budi Santoso',initials:'BS',color:'#2563EB',periode:'April 2026',bruto:'Rp 21.500.000',potongan:'Rp 2.257.500',net:'Rp 19.242.500',status:'Ditransfer',nik:'SMS-001-2019'},
+      {id:2,name:'Siti Rahayu',initials:'SR',color:'#7C3AED',periode:'April 2026',bruto:'Rp 25.000.000',potongan:'Rp 3.000.000',net:'Rp 22.000.000',status:'Ditransfer',nik:'SMS-002-2020'},
+      {id:3,name:'Andi Prasetyo',initials:'AP',color:'#0EA5E9',periode:'April 2026',bruto:'Rp 14.500.000',potongan:'Rp 1.232.500',net:'Rp 13.267.500',status:'Pending',nik:'SMS-015-2024'},
+      {id:4,name:'Dewi Kusuma',initials:'DK',color:'#059669',periode:'April 2026',bruto:'Rp 11.500.000',potongan:'Rp 805.000',net:'Rp 10.695.000',status:'Ditransfer',nik:'SMS-006-2021'},
+      {id:5,name:'Reza Firmansyah',initials:'RF',color:'#D97706',periode:'April 2026',bruto:'Rp 7.200.000',potongan:'Rp 414.000',net:'Rp 6.786.000',status:'Pending',nik:'SMS-018-2024'},
+      {id:6,name:'Fitri Handayani',initials:'FH',color:'#EC4899',periode:'April 2026',bruto:'Rp 13.250.000',potongan:'Rp 993.750',net:'Rp 12.256.250',status:'Ditransfer',nik:'SMS-009-2022'},
+    ],
+  };
+}
+
+function mod_keuangan_reimburse(){
+  return {
+    rows:[
+      {id:1,name:'Andi Prasetyo',initials:'AP',color:'#F59E0B',kategori:'Kesehatan',tgl:'06 Apr 2026',nominal:'Rp 850.000',ket:'Rawat jalan, periksa demam',status:'Pending'},
+      {id:2,name:'Sari Wulandari',initials:'SW',color:'#0EA5E9',kategori:'Transport',tgl:'05 Apr 2026',nominal:'Rp 215.000',ket:'Taxi meeting client di Tangerang',status:'Pending'},
+      {id:3,name:'Reza Firmansyah',initials:'RF',color:'#D97706',kategori:'Makan',tgl:'04 Apr 2026',nominal:'Rp 320.000',ket:'Makan tim setelah lembur',status:'Pending'},
+      {id:4,name:'Dewi Rahayu',initials:'DR',color:'#EC4899',kategori:'Kesehatan',tgl:'03 Apr 2026',nominal:'Rp 1.250.000',ket:'Pemeriksaan gigi (anak)',status:'Disetujui'},
+      {id:5,name:'Faisal Hidayat',initials:'FH',color:'#10B981',kategori:'Lainnya',tgl:'02 Apr 2026',nominal:'Rp 480.000',ket:'Pembelian alat kerja',status:'Disetujui'},
+      {id:6,name:'Hendri Susanto',initials:'HS',color:'#EF4444',kategori:'Transport',tgl:'01 Apr 2026',nominal:'Rp 180.000',ket:'Bensin perjalanan dinas',status:'Ditolak'},
+    ],
+  };
+}
+
+function mod_sdm_manpower(){
+  return {
+    dept:[
+      {nama:'Engineering',aktual:48,target:55,gap:-7},
+      {nama:'IT',aktual:18,target:20,gap:-2},
+      {nama:'Produksi',aktual:65,target:60,gap:5},
+      {nama:'HR & GA',aktual:12,target:12,gap:0},
+      {nama:'Finance',aktual:14,target:14,gap:0},
+      {nama:'Marketing',aktual:8,target:10,gap:-2},
+      {nama:'Operasional',aktual:35,target:35,gap:0},
+      {nama:'Admin',aktual:9,target:8,gap:1},
+    ],
+  };
+}
+
+function mod_laporan_payroll(){
+  return {
+    filterPeriode:'April 2026',
+    filterEntitas:'Semua Entitas',
+    generated:false,
+    rows:[
+      {id:1,name:'Budi Santoso',initials:'BS',color:'#2563EB',bruto:'Rp 21.500.000',potongan:'Rp 2.257.500',net:'Rp 19.242.500'},
+      {id:2,name:'Siti Rahayu',initials:'SR',color:'#7C3AED',bruto:'Rp 25.000.000',potongan:'Rp 3.000.000',net:'Rp 22.000.000'},
+      {id:3,name:'Andi Prasetyo',initials:'AP',color:'#0EA5E9',bruto:'Rp 14.500.000',potongan:'Rp 1.232.500',net:'Rp 13.267.500'},
+      {id:4,name:'Dewi Kusuma',initials:'DK',color:'#059669',bruto:'Rp 11.500.000',potongan:'Rp 805.000',net:'Rp 10.695.000'},
+      {id:5,name:'Reza Firmansyah',initials:'RF',color:'#D97706',bruto:'Rp 7.200.000',potongan:'Rp 414.000',net:'Rp 6.786.000'},
+      {id:6,name:'Fitri Handayani',initials:'FH',color:'#EC4899',bruto:'Rp 13.250.000',potongan:'Rp 993.750',net:'Rp 12.256.250'},
+    ],
+  };
+}
+
+function mod_setting_absensi(){
+  return {
+    toast:false,
+    form:{jamMasuk:'08:00',jamPulang:'17:00',toleransi:15,method:{fingerprint:true,face:true,manual:true}},
+    holidays:[
+      {id:1,tgl:'29 Mar 2026',label:'Hari Raya Nyepi'},
+      {id:2,tgl:'10 Apr 2026',label:'Wafat Isa Almasih'},
+      {id:3,tgl:'01 Mei 2026',label:'Hari Buruh Internasional'},
+      {id:4,tgl:'14 Mei 2026',label:'Kenaikan Isa Almasih'},
+      {id:5,tgl:'01 Jun 2026',label:'Hari Lahir Pancasila'},
+    ],
+    addHoliday(){ this.holidays.push({id:Date.now(),tgl:new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}),label:'Hari Libur Custom'}); },
+    save(){ this.toast=true; setTimeout(()=>{ this.toast=false; }, 2200); },
+  };
+}
+
+function mod_setting_payroll(){
+  return {
+    toast:false,
+    form:{cutoff:25,proses:27,transfer:1,metodePph:'Gross',minHari:21},
+    save(){ this.toast=true; setTimeout(()=>{ this.toast=false; }, 2200); },
+  };
+}
+
+function mod_setting_approval(){
+  return {
+    flow:[
+      {jenis:'Cuti Tahunan',l1:'HRD Manager',l2:null,l3:null,batas:'2 hari kerja'},
+      {jenis:'Lembur',l1:'HRD Manager',l2:null,l3:null,batas:'1 hari kerja'},
+      {jenis:'Pinjaman',l1:'HRD Manager',l2:'Finance Manager',l3:'Direktur',batas:'5 hari kerja'},
+      {jenis:'Payroll',l1:'HRD Manager',l2:'Finance Manager',l3:'Direktur',batas:'3 hari kerja'},
+      {jenis:'Perjalanan Dinas',l1:'Manager Dept',l2:'HRD Manager',l3:null,batas:'2 hari kerja'},
+      {jenis:'Reimbursement',l1:'HRD Manager',l2:null,l3:null,batas:'2 hari kerja'},
+    ],
+  };
+}
 
 const _charts = {};
 function _destroyChart(id){if(_charts[id]){_charts[id].destroy();delete _charts[id];}}
@@ -11776,6 +13385,39 @@ function mod_hr_home(){
 function mod_karyawan(){
   return {
     selected:[],
+    activeTab:'all',
+    tabs:[
+      {id:'all',label:'Semua'},
+      {id:'aktif',label:'Aktif'},
+      {id:'pkwt',label:'PKWT'},
+      {id:'akan-berakhir',label:'Akan Berakhir'},
+    ],
+    searchQ:'',
+    filterDept:'',
+    filterStatus:'',
+    detailEmp:null,
+    detailTab:'info',
+    detailTabs:[
+      {id:'info',label:'Info Pribadi'},
+      {id:'pekerjaan',label:'Pekerjaan'},
+      {id:'kompensasi',label:'Kompensasi'},
+      {id:'riwayat',label:'Riwayat'},
+    ],
+    openDetail(emp){ this.detailEmp=emp; this.detailTab='info'; },
+    closeDetail(){ this.detailEmp=null; },
+    get filtered(){
+      let list = this.employees.slice();
+      if(this.activeTab==='aktif') list = list.filter(e=>e.status==='Aktif');
+      if(this.activeTab==='pkwt')  list = list.filter(e=>e.contractType==='PKWT');
+      if(this.activeTab==='akan-berakhir') list = list.filter(e=>e.contractAlert);
+      if(this.filterDept) list = list.filter(e=>e.dept===this.filterDept);
+      if(this.filterStatus) list = list.filter(e=>e.status===this.filterStatus);
+      if(this.searchQ){
+        const q = this.searchQ.toLowerCase();
+        list = list.filter(e=> e.name.toLowerCase().includes(q) || e.nik.toLowerCase().includes(q) || (e.email||'').toLowerCase().includes(q));
+      }
+      return list;
+    },
     sidebarOpen:{custom:false,accounting:false,asset:false,procurement:false,inventory:false,project:false,hr:true,eoffice:false,esign:false,broadcast:false},
     companies:[
       {id:'holding',name:'Holding Group',code:'HC',color:'#2563EB'},
@@ -11793,18 +13435,18 @@ function mod_karyawan(){
       esign:['Dashboard','Dokumen E-Sign','Tanda Tangan Saya','E-Materai','Template'],
     },
     employees:[
-      {id:1,name:'Budi Santoso',email:'budi.s@sms.co.id',nik:'SMS-001-2019',dept:'Engineering',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Senior Engineer',contractType:'PKWTT',joinDate:'12 Mar 2019',status:'Aktif',avatarColor:'#2563EB',initials:'BS',contractAlert:false},
-      {id:2,name:'Siti Rahayu',email:'siti.r@sms.co.id',nik:'SMS-002-2020',dept:'HR & GA',deptBg:'#F5F3FF',deptColor:'#6D28D9',role:'HR Manager',contractType:'PKWTT',joinDate:'3 Jan 2020',status:'Aktif',avatarColor:'#7C3AED',initials:'SR',contractAlert:false},
-      {id:3,name:'Andi Prasetyo',email:'andi.p@sms.co.id',nik:'SMS-015-2024',dept:'IT',deptBg:'#EFF6FF',deptColor:'#1D4ED8',role:'Frontend Developer',contractType:'PKWT',joinDate:'15 Apr 2024',status:'Aktif',avatarColor:'#0EA5E9',initials:'AP',contractAlert:true},
-      {id:4,name:'Dewi Kusuma',email:'dewi.k@sms.co.id',nik:'SMS-006-2021',dept:'Finance',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Staff Keuangan',contractType:'PKWTT',joinDate:'8 Jun 2021',status:'Aktif',avatarColor:'#059669',initials:'DK',contractAlert:false},
-      {id:5,name:'Reza Firmansyah',email:'reza.f@sms.co.id',nik:'SMS-018-2024',dept:'Produksi',deptBg:'#FFFBEB',deptColor:'#B45309',role:'Operator Produksi',contractType:'PKWT',joinDate:'20 Apr 2024',status:'Aktif',avatarColor:'#D97706',initials:'RF',contractAlert:true},
-      {id:6,name:'Fitri Handayani',email:'fitri.h@sms.co.id',nik:'SMS-009-2022',dept:'Marketing',deptBg:'#FDF2F8',deptColor:'#9D174D',role:'Marketing Executive',contractType:'PKWTT',joinDate:'1 Feb 2022',status:'Aktif',avatarColor:'#EC4899',initials:'FH',contractAlert:false},
-      {id:7,name:'Hendra Wijaya',email:'hendra.w@sms.co.id',nik:'SMS-003-2019',dept:'Operasional',deptBg:'#F0FDFA',deptColor:'#115E59',role:'Supervisor Lapangan',contractType:'PKWTT',joinDate:'20 Sep 2019',status:'Aktif',avatarColor:'#0D9488',initials:'HW',contractAlert:false},
-      {id:8,name:'Maya Sari',email:'maya.s@sms.co.id',nik:'SMS-021-2025',dept:'Admin',deptBg:'#F1F5F9',deptColor:'#334155',role:'Staff Administrasi',contractType:'PKWT',joinDate:'2 Jan 2025',status:'Aktif',avatarColor:'#64748B',initials:'MS',contractAlert:false},
-      {id:9,name:'Toni Kusuma',email:'toni.k@sms.co.id',nik:'SMS-007-2021',dept:'Engineering',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Mechanical Engineer',contractType:'PKWTT',joinDate:'15 Mar 2021',status:'Non-Aktif',avatarColor:'#94A3B8',initials:'TK',contractAlert:false},
-      {id:10,name:'Yuni Astuti',email:'yuni.a@sms.co.id',nik:'SMS-012-2023',dept:'HR & GA',deptBg:'#F5F3FF',deptColor:'#6D28D9',role:'HR Staff',contractType:'PKWTT',joinDate:'5 May 2023',status:'Aktif',avatarColor:'#8B5CF6',initials:'YA',contractAlert:false},
-      {id:11,name:'Ahmad Fauzi',email:'ahmad.f@sms.co.id',nik:'SMS-022-2025',dept:'IT',deptBg:'#EFF6FF',deptColor:'#1D4ED8',role:'Backend Developer',contractType:'PKWT',joinDate:'15 Feb 2025',status:'Aktif',avatarColor:'#3B82F6',initials:'AF',contractAlert:false},
-      {id:12,name:'Linda Permata',email:'linda.p@sms.co.id',nik:'SMS-005-2020',dept:'Finance',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Akuntan Senior',contractType:'PKWTT',joinDate:'10 Nov 2020',status:'Aktif',avatarColor:'#10B981',initials:'LP',contractAlert:false},
+      {id:1,name:'Budi Santoso',email:'budi.s@sms.co.id',nik:'SMS-001-2019',dept:'Engineering',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Senior Engineer',contractType:'PKWTT',joinDate:'12 Mar 2019',endDate:'—',status:'Aktif',avatarColor:'#2563EB',initials:'BS',contractAlert:false,gapok:'Rp 18.500.000'},
+      {id:2,name:'Siti Rahayu',email:'siti.r@sms.co.id',nik:'SMS-002-2020',dept:'HR & GA',deptBg:'#F5F3FF',deptColor:'#6D28D9',role:'HR Manager',contractType:'PKWTT',joinDate:'3 Jan 2020',endDate:'—',status:'Aktif',avatarColor:'#7C3AED',initials:'SR',contractAlert:false,gapok:'Rp 22.000.000'},
+      {id:3,name:'Andi Prasetyo',email:'andi.p@sms.co.id',nik:'SMS-015-2024',dept:'IT',deptBg:'#EFF6FF',deptColor:'#1D4ED8',role:'Frontend Developer',contractType:'PKWT',joinDate:'15 Apr 2024',endDate:'15 Mei 2026',status:'Aktif',avatarColor:'#0EA5E9',initials:'AP',contractAlert:true,gapok:'Rp 12.500.000'},
+      {id:4,name:'Dewi Kusuma',email:'dewi.k@sms.co.id',nik:'SMS-006-2021',dept:'Finance',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Staff Keuangan',contractType:'PKWTT',joinDate:'8 Jun 2021',endDate:'—',status:'Aktif',avatarColor:'#059669',initials:'DK',contractAlert:false,gapok:'Rp 9.500.000'},
+      {id:5,name:'Reza Firmansyah',email:'reza.f@sms.co.id',nik:'SMS-018-2024',dept:'Produksi',deptBg:'#FFFBEB',deptColor:'#B45309',role:'Operator Produksi',contractType:'PKWT',joinDate:'20 Apr 2024',endDate:'20 Mei 2026',status:'Aktif',avatarColor:'#D97706',initials:'RF',contractAlert:true,gapok:'Rp 5.500.000'},
+      {id:6,name:'Fitri Handayani',email:'fitri.h@sms.co.id',nik:'SMS-009-2022',dept:'Marketing',deptBg:'#FDF2F8',deptColor:'#9D174D',role:'Marketing Executive',contractType:'PKWTT',joinDate:'1 Feb 2022',endDate:'—',status:'Aktif',avatarColor:'#EC4899',initials:'FH',contractAlert:false,gapok:'Rp 11.000.000'},
+      {id:7,name:'Hendra Wijaya',email:'hendra.w@sms.co.id',nik:'SMS-003-2019',dept:'Operasional',deptBg:'#F0FDFA',deptColor:'#115E59',role:'Supervisor Lapangan',contractType:'PKWTT',joinDate:'20 Sep 2019',endDate:'—',status:'Aktif',avatarColor:'#0D9488',initials:'HW',contractAlert:false,gapok:'Rp 14.000.000'},
+      {id:8,name:'Maya Sari',email:'maya.s@sms.co.id',nik:'SMS-021-2025',dept:'Admin',deptBg:'#F1F5F9',deptColor:'#334155',role:'Staff Administrasi',contractType:'PKWT',joinDate:'2 Jan 2025',endDate:'2 Jan 2027',status:'Aktif',avatarColor:'#64748B',initials:'MS',contractAlert:false,gapok:'Rp 6.500.000'},
+      {id:9,name:'Toni Kusuma',email:'toni.k@sms.co.id',nik:'SMS-007-2021',dept:'Engineering',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Mechanical Engineer',contractType:'PKWTT',joinDate:'15 Mar 2021',endDate:'—',status:'Non-Aktif',avatarColor:'#94A3B8',initials:'TK',contractAlert:false,gapok:'Rp 13.500.000'},
+      {id:10,name:'Yuni Astuti',email:'yuni.a@sms.co.id',nik:'SMS-012-2023',dept:'HR & GA',deptBg:'#F5F3FF',deptColor:'#6D28D9',role:'HR Staff',contractType:'PKWTT',joinDate:'5 May 2023',endDate:'—',status:'Aktif',avatarColor:'#8B5CF6',initials:'YA',contractAlert:false,gapok:'Rp 8.000.000'},
+      {id:11,name:'Ahmad Fauzi',email:'ahmad.f@sms.co.id',nik:'SMS-022-2025',dept:'IT',deptBg:'#EFF6FF',deptColor:'#1D4ED8',role:'Backend Developer',contractType:'PKWT',joinDate:'15 Feb 2025',endDate:'15 Feb 2027',status:'Aktif',avatarColor:'#3B82F6',initials:'AF',contractAlert:false,gapok:'Rp 13.000.000'},
+      {id:12,name:'Linda Permata',email:'linda.p@sms.co.id',nik:'SMS-005-2020',dept:'Finance',deptBg:'#ECFDF5',deptColor:'#065F46',role:'Akuntan Senior',contractType:'PKWTT',joinDate:'10 Nov 2020',endDate:'—',status:'Aktif',avatarColor:'#10B981',initials:'LP',contractAlert:false,gapok:'Rp 16.000.000'},
     ],
     toggleMenu(k){this.sidebarOpen[k]=!this.sidebarOpen[k];},
     toggleSelect(id){
@@ -11848,6 +13490,14 @@ function mod_absensi(){
     activeTab: 'log',
     search: '',
     selDay: null,
+    viewTab: 'harian',
+    viewTabs:[
+      {id:'harian',label:'Log Harian'},
+      {id:'mingguan',label:'Rekap Mingguan'},
+      {id:'bulanan',label:'Rekap Bulanan'},
+    ],
+    lockedToast: false,
+    lockPeriod(){ this.lockedToast = true; setTimeout(()=>{ this.lockedToast = false; }, 3000); },
     sidebarOpen: {custom:false,accounting:false,asset:false,procurement:false,inventory:false,project:false,hr:true,eoffice:false,esign:false,broadcast:false},
     companies:[
       {id:'holding',name:'Surya Group (Holding)',code:'SG',color:'#F97316'},
@@ -11914,18 +13564,18 @@ function mod_absensi(){
       return this.logData.filter(r=>!this.search||r.name.toLowerCase().includes(this.search.toLowerCase())||r.dept.toLowerCase().includes(this.search.toLowerCase()));
     },
     logData:[
-      {id:1,name:'Budi Santoso',initials:'BS',avatarBg:'#7C3AED',nik:'SMS-001-2019',dept:'Engineering',status:'Hadir',in:'07:52',out:'17:05',dur:'9j 13m',gps:'in'},
-      {id:2,name:'Sari Wulandari',initials:'SW',avatarBg:'#0EA5E9',nik:'SMS-003-2020',dept:'Finance',status:'Hadir',in:'07:58',out:'17:00',dur:'9j 02m',gps:'in'},
-      {id:3,name:'Andi Prasetyo',initials:'AP',avatarBg:'#F59E0B',nik:'SMS-015-2024',dept:'IT',status:'Telat',in:'09:22',out:'18:20',dur:'8j 58m',gps:'in'},
-      {id:4,name:'Dewi Rahayu',initials:'DR',avatarBg:'#EC4899',nik:'SMS-007-2021',dept:'HRD',status:'Hadir',in:'07:45',out:'17:00',dur:'9j 15m',gps:'in'},
-      {id:5,name:'Faisal Hidayat',initials:'FH',avatarBg:'#10B981',nik:'SMS-009-2022',dept:'Engineering',status:'Hadir',in:'07:55',out:'17:30',dur:'9j 35m',gps:'out'},
-      {id:6,name:'Rini Kartika',initials:'RK',avatarBg:'#6366F1',nik:'SMS-011-2022',dept:'Marketing',status:'Izin',in:'—',out:'—',dur:'—',gps:'in'},
-      {id:7,name:'Hendri Susanto',initials:'HS',avatarBg:'#EF4444',nik:'SMS-013-2023',dept:'Legal',status:'Sakit',in:'—',out:'—',dur:'—',gps:'in'},
-      {id:8,name:'Maya Putri',initials:'MP',avatarBg:'#8B5CF6',nik:'SMS-002-2019',dept:'Accounting',status:'Telat',in:'08:45',out:'17:00',dur:'8j 15m',gps:'in'},
-      {id:9,name:'Teguh Pramono',initials:'TP',avatarBg:'#0D9488',nik:'SMS-017-2024',dept:'Engineering',status:'Hadir',in:'07:50',out:'17:10',dur:'9j 20m',gps:'in'},
-      {id:10,name:'Lestari Ningsih',initials:'LN',avatarBg:'#D97706',nik:'SMS-005-2021',dept:'Finance',status:'Alpha',in:'—',out:'—',dur:'—',gps:'in'},
-      {id:11,name:'Bambang Irawan',initials:'BI',avatarBg:'#2563EB',nik:'SMS-019-2024',dept:'IT',status:'Hadir',in:'08:02',out:'17:05',dur:'9j 03m',gps:'in'},
-      {id:12,name:'Fitri Handayani',initials:'FH',avatarBg:'#BE185D',nik:'SMS-006-2021',dept:'HRD',status:'Hadir',in:'07:58',out:'16:55',dur:'8j 57m',gps:'in'},
+      {id:1,name:'Budi Santoso',initials:'BS',avatarBg:'#7C3AED',nik:'SMS-001-2019',dept:'Engineering',status:'Hadir',in:'07:52',out:'17:05',dur:'9j 13m',gps:'in',method:'Fingerprint'},
+      {id:2,name:'Sari Wulandari',initials:'SW',avatarBg:'#0EA5E9',nik:'SMS-003-2020',dept:'Finance',status:'Hadir',in:'07:58',out:'17:00',dur:'9j 02m',gps:'in',method:'Face'},
+      {id:3,name:'Andi Prasetyo',initials:'AP',avatarBg:'#F59E0B',nik:'SMS-015-2024',dept:'IT',status:'Telat',in:'09:22',out:'18:20',dur:'8j 58m',gps:'in',method:'Face'},
+      {id:4,name:'Dewi Rahayu',initials:'DR',avatarBg:'#EC4899',nik:'SMS-007-2021',dept:'HRD',status:'Hadir',in:'07:45',out:'17:00',dur:'9j 15m',gps:'in',method:'Fingerprint'},
+      {id:5,name:'Faisal Hidayat',initials:'FH',avatarBg:'#10B981',nik:'SMS-009-2022',dept:'Engineering',status:'Hadir',in:'07:55',out:'17:30',dur:'9j 35m',gps:'out',method:'Manual'},
+      {id:6,name:'Rini Kartika',initials:'RK',avatarBg:'#6366F1',nik:'SMS-011-2022',dept:'Marketing',status:'Izin',in:'—',out:'—',dur:'—',gps:'in',method:'Manual'},
+      {id:7,name:'Hendri Susanto',initials:'HS',avatarBg:'#EF4444',nik:'SMS-013-2023',dept:'Legal',status:'Sakit',in:'—',out:'—',dur:'—',gps:'in',method:'Manual'},
+      {id:8,name:'Maya Putri',initials:'MP',avatarBg:'#8B5CF6',nik:'SMS-002-2019',dept:'Accounting',status:'Telat',in:'08:45',out:'17:00',dur:'8j 15m',gps:'in',method:'Fingerprint'},
+      {id:9,name:'Teguh Pramono',initials:'TP',avatarBg:'#0D9488',nik:'SMS-017-2024',dept:'Engineering',status:'Hadir',in:'07:50',out:'17:10',dur:'9j 20m',gps:'in',method:'Face'},
+      {id:10,name:'Lestari Ningsih',initials:'LN',avatarBg:'#D97706',nik:'SMS-005-2021',dept:'Finance',status:'Alpha',in:'—',out:'—',dur:'—',gps:'in',method:'Manual'},
+      {id:11,name:'Bambang Irawan',initials:'BI',avatarBg:'#2563EB',nik:'SMS-019-2024',dept:'IT',status:'Hadir',in:'08:02',out:'17:05',dur:'9j 03m',gps:'in',method:'Fingerprint'},
+      {id:12,name:'Fitri Handayani',initials:'FH',avatarBg:'#BE185D',nik:'SMS-006-2021',dept:'HRD',status:'Hadir',in:'07:58',out:'16:55',dur:'8j 57m',gps:'in',method:'Face'},
     ],
     rekapData:[
       {id:1,name:'Budi Santoso',initials:'BS',avatarBg:'#7C3AED',dept:'Engineering',hadir:22,telat:1,alpha:0,izin:0,pct:100,spark:[12,16,14,18,16,18,16]},
@@ -11980,6 +13630,14 @@ function mod_payroll(){
     wizStep:1,
     showSuccess:false,
     search:'',
+    payrollDetail:[
+      {id:1,name:'Budi Santoso',bruto:'Rp 21.500.000',pph:'Rp 1.290.000',bpjsKes:'Rp 215.000',bpjsTk:'Rp 645.000',tapera:'Rp 107.500',net:'Rp 19.242.500'},
+      {id:2,name:'Siti Rahayu',bruto:'Rp 25.000.000',pph:'Rp 1.875.000',bpjsKes:'Rp 250.000',bpjsTk:'Rp 750.000',tapera:'Rp 125.000',net:'Rp 22.000.000'},
+      {id:3,name:'Andi Prasetyo',bruto:'Rp 14.500.000',pph:'Rp 580.000',bpjsKes:'Rp 145.000',bpjsTk:'Rp 435.000',tapera:'Rp 72.500',net:'Rp 13.267.500'},
+      {id:4,name:'Dewi Kusuma',bruto:'Rp 11.500.000',pph:'Rp 287.500',bpjsKes:'Rp 115.000',bpjsTk:'Rp 345.000',tapera:'Rp 57.500',net:'Rp 10.695.000'},
+      {id:5,name:'Reza Firmansyah',bruto:'Rp 7.200.000',pph:'Rp 90.000',bpjsKes:'Rp 72.000',bpjsTk:'Rp 216.000',tapera:'Rp 36.000',net:'Rp 6.786.000'},
+      {id:6,name:'Fitri Handayani',bruto:'Rp 13.250.000',pph:'Rp 397.500',bpjsKes:'Rp 132.500',bpjsTk:'Rp 397.500',tapera:'Rp 66.250',net:'Rp 12.256.250'},
+    ],
     sidebarOpen:{custom:false,accounting:false,asset:false,procurement:false,inventory:false,project:false,hr:true,eoffice:false,esign:false,broadcast:false},
     companies:[
       {id:'holding',name:'Surya Group (Holding)',code:'SG',color:'#F97316'},
